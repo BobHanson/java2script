@@ -236,7 +236,7 @@ public class ASTScriptVisitor extends ASTJ2SDocVisitor {
 		
 //		Start SwingJS modded 6/9/17
 		//buffer.append("Clazz.pu$h ();\r\n");
-		buffer.append("Clazz.pu$h (cla$$);\r\n");
+		buffer.append("Clazz.pu$h ();\r\n");
 		buffer.append("cla$$ = ");
 //		End SwingJS modded 6/9/17		
 		
