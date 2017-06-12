@@ -1262,7 +1262,7 @@ public class ASTScriptVisitor extends ASTJ2SDocVisitor {
 				} else {
 					laterBuffer.append("Clazz.pu$h ();\r\n");
 					laterBuffer.append(str);
-					laterBuffer.append("cla$$ = Clazz.p0p ();\r\n");
+					laterBuffer.append("cla$$= Clazz.p0p ();\r\n");
 				}
 			} else {
 				/*
