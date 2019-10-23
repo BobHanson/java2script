@@ -620,11 +620,11 @@ public class JSGraphics2D implements
 			buf8[pt++] = argb & 0xFF;
 			buf8[pt++] = (isRGB ? 0xFF : (argb >> 24) & 0xFF);
 		}
-		double[] m = HTML5CanvasContext2D.getMatrix(ctx, transform);
-		if (m[0] != 1 || m[1] != 0 || m[2] != 0 || m[3] != 1)
+		double[] m2 = HTML5CanvasContext2D.getMatrix(ctx, transform);
+		if (m2[0] != 1 || m2[1] != 0 || m2[2] != 0 || m2[3] != 1)
 			System.err.println("Unsupported transform");
-		x += m[4];
-		y += m[5];
+		x += m2[4];
+		y += m2[5];
 		ctx.putImageData(imageData, x, y);
 	}
 
