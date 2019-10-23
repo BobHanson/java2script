@@ -1,0 +1,17 @@
+***************
+*** 194,200 ****
+  		}
+  
+  		testing = "true".equals(getProperty("j2s.testing"));
+- 
+  		String prop = getProperty("j2s.compiler.nonqualified.packages");
+  		// older version of the name
+  		String nonqualifiedPackages = getProperty("j2s.compiler.nonqualified.classes");
+--- 196,202 ----
+  		}
+  
+  		testing = "true".equals(getProperty("j2s.testing"));
++ 		
+  		String prop = getProperty("j2s.compiler.nonqualified.packages");
+  		// older version of the name
+  		String nonqualifiedPackages = getProperty("j2s.compiler.nonqualified.classes");

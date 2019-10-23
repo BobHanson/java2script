@@ -1,5 +1,7 @@
 package net.sf.j2s.core;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.BuildContext;
 import org.eclipse.jdt.core.compiler.ReconcileContext;
@@ -86,7 +88,13 @@ public class Java2ScriptCompilationParticipant extends org.eclipse.jdt.core.comp
 	 *            identifies when the build is a batch build
 	 */
 	public void buildStarting(BuildContext[] files, boolean isBatch) {
-		javaFiles = files;
+		if (javaFiles != null) {
+			BuildContext[] concat = Arrays.copyOf(javaFiles, javaFiles.length + files.length);
+			System.arraycopy(files, 0, concat , javaFiles.length, files.length);
+			javaFiles = concat;
+		} else {
+			javaFiles = files;
+		}
 		System.out.println("buildStarting " + files.length + " files, isBatch=" + isBatch);
 	}
 
@@ -110,7 +118,8 @@ public class Java2ScriptCompilationParticipant extends org.eclipse.jdt.core.comp
 			}
 			System.out.println("building JavaScript " + project.getProject().getLocation());
 			for (int i = 0; i < javaFiles.length; i++) {
-				System.out.println("transpiling " + javaFiles[i]);
+				System.out.println("[" + (i+1) + "/" + javaFiles.length + "] transpiling " + javaFiles[i]);
+
 // trying to keep the progess monitor running - didn't work
 //				try {
 //					Thread.currentThread().sleep(1);

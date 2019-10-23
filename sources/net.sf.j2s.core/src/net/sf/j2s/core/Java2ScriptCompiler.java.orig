@@ -283,7 +283,7 @@ class Java2ScriptCompiler {
 	 */
 	boolean compileToJavaScript(IFile javaSource) {
 
-		String fileName = new String(javaSource.getFullPath().removeFirstSegments(1).toPortableString());
+		String fileName = new String(javaSource.getName());
 		if (lstExcludedPaths != null) {
 			for (int i = lstExcludedPaths.size(); --i >= 0;)
 				if (fileName.startsWith(lstExcludedPaths.get(i)))
