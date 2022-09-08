@@ -15234,7 +15234,7 @@ var shiftArray = function(a, i0, k) {
 
 var getParamCode = Clazz._getParamCode = function(cl) {
   cl.$clazz$ && (cl = cl.$clazz$);
-  return cl.__PARAMCODE || (cl.__PARAMCODE = stripJavaLang(cl.__CLASS_NAME$__ || cl.__CLASS_NAME__).replace(/\./g, '_'));
+  return cl.__PARAMCODE || (cl.__PARAMCODE = stripJavaLang(cl.__CLASS_NAME__).replace(/\./g, '_'));
 }
 
 var newTypedA = function(baseClass, args, nBits, ndims, isClone) {
