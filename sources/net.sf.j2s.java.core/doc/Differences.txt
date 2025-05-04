@@ -373,7 +373,7 @@ component "uiClass" (one per component, such as BasicButtonUI or BasicTextFieldU
 Peers are native objects of the operating system. These are the virtual buttons and text areas
 that the user is interacting with at a very base level. They are chunks of low-level code that
 paint the screen to give the illusion that you really are pressing a button or typing text 
-ot the screen. Their events are being passed on to Java or the browser by the operating system. 
+to the screen. Their events are being passed on to Java or the browser by the operating system. 
 
 UI classes provide a consistent "look and feel" for these native objects, rendering them onto 
 the native window canvas and handling all user-generated events. They paint the borders, 
