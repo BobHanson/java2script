@@ -359,6 +359,9 @@ Java or JavaScript equivalents.
 Swing GUI Peers and UIClasses
 -----------------------------
 
+SwingJS does not support custom UI classes that subclass UI classes in javax/swing/plaf 
+or com/sun/javax/swing/plaf.
+
 One of the biggest adaptations introduced in SwingJS is in the area of the graphical 
 user interface. Basically, what we have is a Java Swing "LookAndFeel" customized for HTML.
 
