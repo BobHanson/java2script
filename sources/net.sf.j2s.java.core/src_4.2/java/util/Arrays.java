@@ -441,7 +441,7 @@ public class Arrays {
 		/**
 		 * @j2sNative
 		 * 
-		 * 			temp.sort(c.compare);
+		 * 			temp.sort(function(a,b){return c.compare(a,b)});
 		 */
 		{
 		}
