@@ -16325,13 +16325,13 @@ var setSuperclass = function(clazzThis, clazzSuper){
       clazzThis.prototype = new clazzSuper(inheritArgs);     
       if (clazzSuper == Error) {
         var pp = Throwable.prototype;
-        for (o in pp) {
+        for (var o in pp) {
           if (!pp.exClazz || pp.exClazz != Clazz._O)
             clazzThis.prototype[o] = pp[o];
         }
       }
     } 
-    for (o in p) {
+    for (var o in p) {
       if (!p[o].exClazz || p[o].exClazz != Clazz._O)
       clazzThis.prototype[o] = p[o];
     }      
