@@ -1,5 +1,6 @@
 // j2sApplet.js BH = Bob Hanson hansonr@stolaf.edu
 
+// BH 2025.08.16 allow loading file:/// from current directory
 // BH 2025.04.20 adds Info.coreAssets:"coreAssets.zip"
 // BH 2025.04.18 enables Info.readyFunction for headless apps
 // BH 2025.04.17 adds option for explicit directory for core files different from j2sPath/core
@@ -189,6 +190,7 @@ window.J2S = J2S = (function() {
 					// null here means no conversion necessary
 					"INTERNET.TEST" : "https://pubchem.ncbi.nlm.nih.gov",
 					"chemapps.stolaf.edu" : null,
+        				"zakodium.com":null,
 					"cactus.nci.nih.gov" : null,
 					".x3dna.org" : null,
 					"rruff.geo.arizona.edu" : null,
@@ -922,17 +924,25 @@ if (database == "_" && J2S._serverUrl.indexOf("//your.server.here/") >= 0) {
 		// swingjs.api.J2SInterface
 		// use host-server PHP relay if not from this host
 
-		if (fileName.indexOf("/") == 0)
+		if (fileName.indexOf("/") == 0) {
 			fileName = "." + fileName;
-		else if (fileName.indexOf("https://./") == 0)
+		} else if (fileName.indexOf("https://./") == 0) {
 			fileName = fileName.substring(10);
-		else if (fileName.indexOf("http://./") == 0)
+		} else if (fileName.indexOf("http://./") == 0) {
 			fileName = fileName.substring(9);
-		else if (fileName.indexOf("file:/") >= 0 
-				&& Clazz.loadClass("swingjs.JSUtil") != null
-				&& fileName.indexOf(swingjs.JSUtil.getAppletDocumentPath$()) != 0
-				&& fileName.indexOf(swingjs.JSUtil.getAppletCodePath$()) != 0)
-			fileName = "./" + fileName.substring(5);
+		} else if (fileName.indexOf("file:/") >= 0) {
+			var pt = fileName.lastIndexOf("/");
+			if (fileName.indexOf("/core_") == pt && fileName.endsWith(".js")
+					|| document && (pt = document.location.href.lastIndexOf("/") + 1) > 0
+					   && fileName.indexOf(document.location.href.substring(0, pt) == 0)) {
+			  // allow core_*.js from anywhere, or other files within the local document path
+			} else if (Clazz.loadClass("swingjs.JSUtil") != null
+					&& fileName.indexOf(swingjs.JSUtil.getAppletDocumentPath$()) != 0
+					&& fileName.indexOf(swingjs.JSUtil.getAppletCodePath$()) != 0) {
+				// applet only, not application
+				fileName = "./" + fileName.substring(5);
+			}
+		} 
 		isBinary = (isBinary || J2S.isBinaryUrl(fileName));
 		var isPDB = !noProxy && (fileName.indexOf("pdb.gz") >= 0 && fileName
 				.indexOf("//www.rcsb.org/pdb/files/") >= 0);
@@ -977,6 +987,10 @@ if (database == "_" && J2S._serverUrl.indexOf("//your.server.here/") >= 0) {
 				info.type = "POST";
 				info.url = fileName.split("?POST?")[0]
 				info.data = fileName.split("?POST?")[1]
+				if (info.data.startsWith('{"')) {
+					info.contentType = "application/json";
+					info.data = info.data.replaceAll("\n", "\\\\n");
+				}
 			} else {
 				!info.type && (info.type = "GET");
 				info.url = fileName;
