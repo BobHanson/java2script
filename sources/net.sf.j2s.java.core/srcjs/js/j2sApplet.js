@@ -1,5 +1,6 @@
 // j2sApplet.js BH = Bob Hanson hansonr@stolaf.edu
 
+// BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
 // BH 2025.08.16 allow loading file:/// from current directory
 // BH 2025.04.20 adds Info.coreAssets:"coreAssets.zip"
 // BH 2025.04.18 enables Info.readyFunction for headless apps
@@ -2880,10 +2881,15 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				if (codePath.indexOf("://") < 0) {
 					var base = document.location.href.split("#")[0]
 							.split("?")[0].split("/");
-					if (codePath.indexOf("/") == 0)
+					if (codePath.indexOf("/") == 0) {
 						base = [ base[0], codePath.substring(1) ];
-					else
+					} else {
+						while (codePath.indexOf("../") == 0) {
+							base = base.slice(0, base.length - 1);
+							codePath = codePath.substring(3);
+						}
 						base[base.length - 1] = codePath;
+					}
 					codePath = base.join("/");
 				}
 				applet._j2sFullPath = codePath.substring(0, codePath.length - 1);

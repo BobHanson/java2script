@@ -10686,6 +10686,7 @@ return jQuery;
 })(jQuery,document,"click mousemove mouseup touchmove touchend", "outjsmol");
 // j2sApplet.js BH = Bob Hanson hansonr@stolaf.edu
 
+// BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
 // BH 2025.08.16 allow loading file:/// from current directory
 // BH 2025.04.20 adds Info.coreAssets:"coreAssets.zip"
 // BH 2025.04.18 enables Info.readyFunction for headless apps
@@ -10876,6 +10877,7 @@ window.J2S = J2S = (function() {
 					// null here means no conversion necessary
 					"INTERNET.TEST" : "https://pubchem.ncbi.nlm.nih.gov",
 					"chemapps.stolaf.edu" : null,
+        				"zakodium.com":null,
 					"cactus.nci.nih.gov" : null,
 					".x3dna.org" : null,
 					"rruff.geo.arizona.edu" : null,
@@ -11672,6 +11674,10 @@ if (database == "_" && J2S._serverUrl.indexOf("//your.server.here/") >= 0) {
 				info.type = "POST";
 				info.url = fileName.split("?POST?")[0]
 				info.data = fileName.split("?POST?")[1]
+				if (info.data.startsWith('{"')) {
+					info.contentType = "application/json";
+					info.data = info.data.replaceAll("\n", "\\\\n");
+				}
 			} else {
 				!info.type && (info.type = "GET");
 				info.url = fileName;
@@ -13561,10 +13567,15 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				if (codePath.indexOf("://") < 0) {
 					var base = document.location.href.split("#")[0]
 							.split("?")[0].split("/");
-					if (codePath.indexOf("/") == 0)
+					if (codePath.indexOf("/") == 0) {
 						base = [ base[0], codePath.substring(1) ];
-					else
+					} else {
+						while (codePath.indexOf("../") == 0) {
+							base = base.slice(0, base.length - 1);
+							codePath = codePath.substring(3);
+						}
 						base[base.length - 1] = codePath;
+					}
 					codePath = base.join("/");
 				}
 				applet._j2sFullPath = codePath.substring(0, codePath.length - 1);
