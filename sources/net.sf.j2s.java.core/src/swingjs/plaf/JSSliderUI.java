@@ -267,7 +267,7 @@ public class JSSliderUI extends JSLightweightUI implements PropertyChangeListene
 		 *               range: false, 
 		 *               min: me.min,
 		 *               max: me.max,
-		 *               value: me.val, 
+		 *               value: me.jsval, 
 		 *               disabled: me.disabled,
 		 *               inverted: me.isInverted, 
 		 *               change: function(jqevent, handle) {
@@ -341,7 +341,10 @@ public class JSSliderUI extends JSLightweightUI implements PropertyChangeListene
 	 * @param isNew
 	 */
 	private void setup(boolean isNew) {
-		
+		if (!sliderInitialized()) {
+			setJQuerySliderAndEvents();
+			isNew=true;
+		}		
 		sliderTrack = DOMNode.lastChild(domNode);
 		sliderHandle = DOMNode.firstChild(sliderTrack);
 		// mark the handle and track with the "swingjs-ui" class
