@@ -60,8 +60,8 @@ import swingjs.JSToolkit;
 import swingjs.JSUtil;
 import swingjs.api.js.DOMNode;
 import swingjs.api.js.J2SInterface;
-import swingjs.api.js.JQuery;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 import javajs.api.js.HTML5Applet.JSFunction;
 
 /**

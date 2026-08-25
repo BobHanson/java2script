@@ -9,7 +9,7 @@ j2s.compiler.read.annotations=true
 # customizable list for what annotations to skip
 j2s.compiler.ignored.annotations=CallerSensitive;ConstructorProperties;Deprecated;Override;SafeVarargs;SuppressWarnings;FunctionalInterface;Documented;Inherited;Native;Repeatable;Retention;Transient;
 
-j2s.compiler.nonqualified.packages=test.js
+#j2s.compiler.nonqualified.packages=test.js
 
 #output file name for logging methods declared - delete the file to regenerate a listing 
 #j2s.log.methods.declared=methodsDeclared.csv
@@ -25,4 +25,4 @@ j2s.compiler.nonqualified.packages=test.js
 #a semicolon-separated list of package-level file paths to be excluded
 #j2s.excluded.paths=test;testng
 
-j2s.compiler.mode=debug
+#j2s.compiler.mode=debug

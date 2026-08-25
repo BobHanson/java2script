@@ -15,7 +15,7 @@ import swingjs.JSKeyEvent;
 import swingjs.JSMouse;
 import swingjs.JSToolkit;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 import javajs.api.js.HTML5Applet.JSFunction;
 
 class JSComboPopupList extends JList {

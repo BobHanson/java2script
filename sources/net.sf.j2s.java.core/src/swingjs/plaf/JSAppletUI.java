@@ -8,7 +8,7 @@ import javax.swing.JMenuBar;
 import javax.swing.LookAndFeel;
 
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 
 public class JSAppletUI extends JSLightweightUI {
 

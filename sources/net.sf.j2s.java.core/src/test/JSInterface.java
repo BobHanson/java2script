@@ -1,6 +1,6 @@
 package test;
 
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 
 /** 
  * called by JSmol JavaScript methods using

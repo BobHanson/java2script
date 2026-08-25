@@ -20,7 +20,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import javajs.api.js.JSUtilI;
+import javajs.api.JSUtilI;
 import javajs.api.js.HTML5Applet.Promise;
 
 /**

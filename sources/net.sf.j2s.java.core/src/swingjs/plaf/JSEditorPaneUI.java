@@ -43,8 +43,8 @@ import sun.swing.DefaultLookup;
 import swingjs.JSHTMLHelper;
 import swingjs.JSToolkit;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
-import swingjs.api.js.JQueryObject.JQEvent;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject.JQEvent;
 
 /**
  * Note that JEditorPane does not have a no-wrap option the way JTextArea does.

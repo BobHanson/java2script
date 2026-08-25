@@ -12,7 +12,7 @@ import javax.swing.JRootPane;
 import javax.swing.RootPaneContainer;
 
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 import swingjs.api.js.JSInterface;
 import swingjs.plaf.JSComponentUI;
 import swingjs.plaf.Resizer;

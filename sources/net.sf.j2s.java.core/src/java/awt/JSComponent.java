@@ -58,7 +58,7 @@ import swingjs.JSMouse;
 import swingjs.JSToolkit;
 import swingjs.JSUtil;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 import swingjs.plaf.JSComponentUI;
 
 /**

@@ -40,7 +40,7 @@ import java.awt.color.ColorSpace;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import javajs.api.js.JSUtilI;
+import javajs.api.JSUtilI;
 import sun.awt.image.ByteComponentRaster;
 import sun.awt.image.BytePackedRaster;
 import sun.awt.image.IntegerComponentRaster;
@@ -50,7 +50,7 @@ import sun.awt.image.ShortComponentRaster;
 import sun.awt.image.SunWritableRaster;
 import swingjs.JSGraphics2D;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 
 /**
  * SwingJS note:

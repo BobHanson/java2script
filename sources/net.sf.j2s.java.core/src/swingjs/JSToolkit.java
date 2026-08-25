@@ -71,8 +71,8 @@ import sun.awt.image.FileImageSource;
 import sun.awt.image.ToolkitImage;
 import swingjs.api.Interface;
 import swingjs.api.JSFileHandler;
-import swingjs.api.js.HTML5CanvasContext2D;
-import swingjs.api.js.JQuery;
+import swingjs.api.js.DOMNode.HTML5Canvas.Context2D;
+import swingjs.api.js.DOMNode.JQuery;
 import swingjs.plaf.JSComponentUI;
 
 
@@ -235,9 +235,9 @@ public class JSToolkit extends SunToolkit
 		return false;
 	}
 
-	private static HTML5CanvasContext2D defaultContext;
+	private static Context2D defaultContext;
 
-	public static float getStringWidth(HTML5CanvasContext2D context, Font font,
+	public static float getStringWidth(Context2D context, Font font,
 			String text) {
 		if (text == null || text.length() == 0)
 			return 0;
@@ -257,7 +257,7 @@ public class JSToolkit extends SunToolkit
 		return w;
 	}
 
-	public static Object getTextMetrics(HTML5CanvasContext2D context, Font font,
+	public static Object getTextMetrics(Context2D context, Font font,
 			String text) {
 		if (text == null || text.length() == 0)
 			return 0;
@@ -292,7 +292,7 @@ public class JSToolkit extends SunToolkit
 	 *  
 	 * @return
 	 */
-	private static HTML5CanvasContext2D getDefaultCanvasContext2d() {
+	private static Context2D getDefaultCanvasContext2d() {
 		/**
 		 * @j2sNative
 		 * 

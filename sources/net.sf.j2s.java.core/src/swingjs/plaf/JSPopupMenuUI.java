@@ -55,8 +55,8 @@ import javax.swing.event.MenuKeyListener;
 import swingjs.JSMouse;
 import swingjs.JSUtil;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
-import swingjs.api.js.JQueryObject.JQEvent;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject.JQEvent;
 import swingjs.jquery.JQueryUI;
 
 public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, MouseListener {

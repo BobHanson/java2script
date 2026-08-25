@@ -11,7 +11,7 @@ import java.awt.image.WritableRaster;
 
 import swingjs.api.Interface;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 
 
 /**

@@ -101,7 +101,7 @@ import sun.swing.DefaultLookup;
 import sun.swing.SwingUtilities2;
 import sun.swing.UIAction;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 
 /**
  * SwingJS starting point was BasicTreeUI;

@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
+import javajs.api.JSUtilI;
 import javajs.api.js.J2SObjectInterface;
-import javajs.api.js.JSUtilI;
 
 /**
  * 

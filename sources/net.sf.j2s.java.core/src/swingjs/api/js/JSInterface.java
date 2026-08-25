@@ -1,7 +1,10 @@
 package swingjs.api.js;
 
+import swingjs.api.js.DOMNode.HTML5Canvas;
 /**
- * called by SwingJS JavaScript methods
+ * interface methods called by SwingJS JavaScript methods into JSFrameViewer
+ * 
+ * static methods called by Java
  * 
  */
 public interface JSInterface {

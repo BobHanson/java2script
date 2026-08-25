@@ -431,18 +431,7 @@ public class Java2ScriptVisitor extends ASTVisitor {
 	private ASTNode innerNode;
 	private String this$0Name;
 
-//	private static IType appletType;  // do we care?
-
 	public Java2ScriptVisitor() {
-		// default constructor is necessary for addClassOrInterface
-
-		// TODO how to compare a type with a subclass of JApplet?
-		// this would be useful for automatically aliasing public methods
-//		try {
-//			appletType = project.findType("javax.swing.JApplet");
-//		} catch (JavaModelException e) {
-//			logErr("Java2ScriptVisitor could not find javax.swing.JApplet");
-//		}
 	}
 
 	public Java2ScriptVisitor setProject(IJavaProject project, boolean testing) {
@@ -575,6 +564,10 @@ public class Java2ScriptVisitor extends ASTVisitor {
 
 	private ArrayList<String> applets, apps;
 
+	/**
+	 * this class subclasses javax.swingjs.JApplet, and so 
+	 * all of its public methods are aliased with nonqualified names
+	 */
 	private boolean isUserApplet;
 
 	private int class_localType = NOT_LOCAL;
@@ -606,9 +599,6 @@ public class Java2ScriptVisitor extends ASTVisitor {
 	private boolean checkAddApplet(ITypeBinding binding) {
 		if (Modifier.isAbstract(binding.getModifiers()))
 			return false;
-		// IType bound = (IType) binding.getJavaElement();
-		// How to compare this with JApplet?
-		// ITypeBinding b = binding;
 		while ((binding = binding.getSuperclass()) != null) {
 			String name = binding.getQualifiedName();
 			if ("javax.swing.JApplet".equals(name) || "java.applet.Applet".equals(name)) {
@@ -5838,6 +5828,8 @@ public class Java2ScriptVisitor extends ASTVisitor {
 	 * 
 	 * (e) the method is not an explicitly nonqualified method (namely, toString())
 	 * or in an explicitly nonqualified class
+	 * 
+	 * (f) the method is a public method in a class that subclasses javax.swingjs.JApplet (see isUserApplet)
 	 * 
 	 * @param j2sName
 	 * @param mBinding

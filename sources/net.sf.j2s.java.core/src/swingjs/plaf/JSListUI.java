@@ -78,7 +78,7 @@ import swingjs.JSUtil;
 //import javax.swing.TransferHandler;
 //import javax.swing.plaf.ComponentUI;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 
 /**
  * An extensible implementation of {@code ListUI}.

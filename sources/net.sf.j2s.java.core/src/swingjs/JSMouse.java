@@ -39,8 +39,8 @@ import java.awt.event.MouseWheelEvent;
 import javax.swing.JComponent;
 
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
-import swingjs.api.js.JQueryObject.JQEvent;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject.JQEvent;
 import swingjs.plaf.JSComponentUI;
 
 /**

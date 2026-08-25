@@ -22,7 +22,7 @@ import javax.swing.text.html.StyleSheet;
 
 import javajs.util.PT;
 import swingjs.api.js.J2SInterface;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 import swingjs.plaf.JSComponentUI;
 
 /**

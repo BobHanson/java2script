@@ -1,4 +1,4 @@
-package javajs.api.js;
+package javajs.api;
 
 import java.awt.Component;
 import java.io.File;
@@ -17,6 +17,7 @@ import java.util.zip.ZipInputStream;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 
+import javajs.api.js.HTML5Applet;
 import javajs.api.js.HTML5Applet.Promise;
 
 public interface JSUtilI {

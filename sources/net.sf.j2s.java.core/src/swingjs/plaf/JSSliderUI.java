@@ -32,7 +32,7 @@ import swingjs.JSGraphics2D;
 import swingjs.JSToolkit;
 import swingjs.JSUtil;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 import swingjs.jquery.JQueryUI;
 
 /**

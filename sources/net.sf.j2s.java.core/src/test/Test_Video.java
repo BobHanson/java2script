@@ -43,7 +43,7 @@ import javax.swing.Timer;
 import javax.swing.TransferHandler;
 import javax.swing.WindowConstants;
 
-import javajs.api.js.JSUtilI;
+import javajs.api.JSUtilI;
 import javajs.async.SwingJSUtils.StateHelper;
 import javajs.util.Rdr;
 import javajs.util.VideoReader;

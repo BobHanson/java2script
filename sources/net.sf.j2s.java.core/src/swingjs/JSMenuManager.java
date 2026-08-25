@@ -8,7 +8,7 @@ import javax.swing.MenuElement;
 import javax.swing.MenuSelectionManager;
 
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.JQueryObject;
+import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 
 public class JSMenuManager extends MenuSelectionManager {
 	

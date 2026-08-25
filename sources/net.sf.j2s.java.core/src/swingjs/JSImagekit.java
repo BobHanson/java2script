@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import swingjs.JSFileSystem.JSPath;
 import swingjs.api.Interface;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas;
 import swingjs.json.JSON;
 
 /**

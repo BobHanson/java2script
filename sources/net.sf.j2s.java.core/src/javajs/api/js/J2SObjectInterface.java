@@ -1,7 +1,7 @@
 package javajs.api.js;
 
 /**
- * methods in j2s JavaScript accessed in Jmol -- note that there is a different  interface in SwingJS
+ * methods in j2s JavaScript accessed in in SwingJS
  */
 public interface J2SObjectInterface {
 	

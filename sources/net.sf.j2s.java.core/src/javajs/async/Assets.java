@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javajs.api.js.JSUtilI;
+import javajs.api.JSUtilI;
 
 /**
  * The Assets class allows assets such as images and property files to be

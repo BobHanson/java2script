@@ -45,10 +45,10 @@ import javajs.util.ZipTools;
 import sun.awt.AppContext;
 import swingjs.api.Interface;
 import swingjs.api.js.DOMNode;
+import javajs.api.JSUtilI;
 import javajs.api.js.HTML5Applet;
-import javajs.api.js.JSUtilI;
 import swingjs.api.js.J2SInterface;
-import swingjs.api.js.JQuery;
+import swingjs.api.js.DOMNode.JQuery;
 import javajs.api.js.HTML5Applet.JSFunction;
 import swingjs.json.JSON;
 import swingjs.plaf.JSComponentUI;
@@ -59,7 +59,6 @@ public class JSUtil implements JSUtilI {
 	public JSUtil() {}
 
 	/**
-	 * @j2sAlias newJSUtil
 	 * 
 	 * @return instance of this class
 	 */
@@ -837,14 +836,14 @@ public class JSUtil implements JSUtilI {
 	}
 
 	@Override
-	public byte[] getURLBytes(URL url) {
-		return (byte[]) url._streamData;
-	};
-	
-	@Override
 	public byte[] getBytes(File f) {
 		return f.秘bytes;
 	}
+	
+	@Override
+	public byte[] getURLBytes(URL url) {
+		return (byte[]) url._streamData;
+	};
 	
 	@Override
 	public HTML5Applet getAppletForComponent(Component c) {

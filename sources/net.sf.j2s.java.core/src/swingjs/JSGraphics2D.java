@@ -37,9 +37,9 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.HTML5Canvas;
-import swingjs.api.js.HTML5CanvasContext2D;
-import swingjs.api.js.HTML5CanvasContext2D.ImageData;
+import swingjs.api.js.DOMNode.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas.Context2D;
+import swingjs.api.js.DOMNode.HTML5Canvas.Context2D.ImageData;
 
 // BH 9/18/2018 fill3DRect fix
 // BH 6/2018 adds g.copyArea(x,y,width,height,dx,dy)
@@ -67,9 +67,9 @@ public class JSGraphics2D implements
 	private int height;
 	private HTML5Canvas canvas;
 
-	private HTML5CanvasContext2D ctx;
+	private Context2D ctx;
 	
-	public HTML5CanvasContext2D getContext2D() {
+	public Context2D getContext2D() {
 		return ctx;
 	}
 	private GraphicsConfiguration gc;
@@ -493,7 +493,7 @@ public class JSGraphics2D implements
 				GradientPaint p = (GradientPaint) shader;
 				Point2D.Float p1 = (Point2D.Float) p.getPoint1();
 				Point2D.Float p2 = (Point2D.Float) p.getPoint2();
-				HTML5CanvasContext2D.createLinearGradient(ctx, p1, p2, JSToolkit.getCSSColor(p.getColor1(), true),
+				Context2D.createLinearGradient(ctx, p1, p2, JSToolkit.getCSSColor(p.getColor1(), true),
 						JSToolkit.getCSSColor(p.getColor2(), true));
 				ctx.beginPath();
 				doShape(s);
@@ -707,7 +707,7 @@ public class JSGraphics2D implements
 	 * @return true if img is not null
 	 */
 	private boolean drawImagePriv(Image img, int x, int y, int width, int height, ImageObserver observer) {
-		double[] m = HTML5CanvasContext2D.setMatrix(ctx, transform);
+		double[] m = Context2D.setMatrix(ctx, transform);
 		boolean isToSelf = (this == ((BufferedImage) img).秘g);
 		boolean isOpaque = ((BufferedImage) img).秘isOpaque();
 		// if get秘pix returns pixels, we use them. Otherwise we turn this into an image
@@ -1109,7 +1109,7 @@ public class JSGraphics2D implements
 	public void transform(AffineTransform t) {
 		transformCTX(t);
 		transform.concatenate(t);
-		HTML5CanvasContext2D.setMatrix(ctx, null);
+		Context2D.setMatrix(ctx, null);
 	}
 
 	private void transformCTX(AffineTransform t) {
@@ -1294,7 +1294,7 @@ public class JSGraphics2D implements
 		map[SAVE_TRANSFORM] = transform.秘toArray();
 		map[SAVE_FONT] = font;
 		map[SAVE_CLIP] = currentClip;
-		return HTML5CanvasContext2D.push(ctx, map);
+		return Context2D.push(ctx, map);
 	}
 
 	private boolean unclipped = false;
@@ -1316,7 +1316,7 @@ public class JSGraphics2D implements
 			System.out.println("JSGraphics2D.unclip " + n);
 		}
 
-		Object[][] stack = HTML5CanvasContext2D.getSavedStack(ctx);
+		Object[][] stack = Context2D.getSavedStack(ctx);
 		unclipped = (n < 0);
 		if (unclipped)
 			n = -n;
@@ -1348,8 +1348,8 @@ public class JSGraphics2D implements
 		if (unclipped) {
 			unclip(Integer.MAX_VALUE);
 		}
-		while ((n = HTML5CanvasContext2D.getSavedLevel(ctx)) >= n0) {
-			setState(HTML5CanvasContext2D.pop(ctx));
+		while ((n = Context2D.getSavedLevel(ctx)) >= n0) {
+			setState(Context2D.pop(ctx));
 			ctx.restore();
 			if (debugClip) {
 				System.out.println("restore n=" + n + " " + transform);
