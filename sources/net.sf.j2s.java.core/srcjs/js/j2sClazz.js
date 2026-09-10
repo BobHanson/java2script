@@ -7,6 +7,7 @@
 
 // Google closure compiler cannot handle Clazz.new or Clazz.super
 
+// WC 2026.09.10 AI fixing	return Long.$sub(a,Long.$mul(Long.$div(a,n),n));
 // BH 2026.06.16 fixing x.replace(y,"...$...") not working properly
 // BH 2025.10.16 minimizing missing package.js message
 // BH 2025.04.17 adds option for explicit directory for core files different from j2sPath/core
@@ -5034,7 +5035,7 @@ Long.$mod=function(a,n){
 		return a%n;
 	}
 	// a mod n = a - (a/n)*n
-	return Long.sub(a,Long.mul(Long.div(a,n),n));
+	return Long.$sub(a,Long.$mul(Long.$div(a,n),n));
 }
 
 var doLong = function(f,args) {

@@ -1,5 +1,9 @@
-// j2sApplet.js BH = Bob Hanson hansonr@stolaf.edu
+// j2sApplet.js 
 
+// BH = Bob Hanson hansonr@stolaf.edu 
+// WC = Wolfgang Christian wochristian@davidson.edu
+
+// WC 2026.09.10 ChatGPT-plus AI-generated touch improvements
 // BH 2026.08.23 adds css touch-action none for resizer
 // BH 2025.10.28 moves template.html getClassList to here as J2S.getClassList(optionalName)
 // BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
@@ -1762,8 +1766,260 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	J2S._haveMouse;
 	J2S._firstTouch; // three-position switch: undefined, true, false
 
+	var getTapControl = function(target) {
+		return target && target.closest ? target.closest(".j2sbutton") || target : target;
+	};
+
+	var isTouchPointerEvent = function(ev) {
+		var oe = ev.originalEvent || ev;
+		return ev.type.indexOf("pointer") == 0 ?
+			(oe.pointerType == "touch" || oe.pointerType == "pen" ||
+				ev.pointerType == "touch" || ev.pointerType == "pen") : false;
+	};
+
+	// Mobile Safari may follow a touch or Pencil pointer event with compatibility
+	// mouse events. Those must not switch SwingJS permanently into mouse-only mode
+	// or duplicate the press/release already delivered by the pointer stream.
+	var isCompatibilityMouseEvent = function(ev) {
+		var oe = ev.originalEvent || ev;
+		return !!(oe.sourceCapabilities && oe.sourceCapabilities.firesTouchEvents) ||
+			(!!J2S._lastTouchPointerDown &&
+				Date.now() - J2S._lastTouchPointerDown.time < 800) ||
+			(!!J2S._lastTouchPointerUp &&
+				Date.now() - J2S._lastTouchPointerUp < 800);
+	};
+
+	var getRawEventPoint = function(ev) {
+		var oe = ev.originalEvent || ev;
+		if (oe.targetTouches && oe.targetTouches.length)
+			oe = oe.targetTouches[0];
+		else if (oe.changedTouches && oe.changedTouches.length)
+			oe = oe.changedTouches[0];
+		return {
+			x: oe.pageX != null ? oe.pageX : ev.pageX,
+			y: oe.pageY != null ? oe.pageY : ev.pageY
+		};
+	};
+
+	// On a touch screen there is no secondary mouse button. A hold or a
+	// two-finger press therefore delivers the same Java MouseEvent sequence as
+	// a desktop right-click. Keeping this at the event bridge means Tracker's
+	// existing context menus continue to decide which menu belongs to the item.
+	var isTouchEvent = function(ev) {
+		return ev && (ev.type == "touchstart" || ev.type == "touchmove" ||
+			ev.type == "touchend" || ev.type == "touchcancel" ||
+			isTouchPointerEvent(ev));
+	};
+
+	var stopTouchEvent = function(ev) {
+		if (ev.preventDefault)
+			ev.preventDefault();
+		if (ev.stopPropagation)
+			ev.stopPropagation();
+	};
+
+	var clearTouchContext = function(who) {
+		var state = who && who._touchContext;
+		if (state && state.timer)
+			clearTimeout(state.timer);
+		if (state && state.cleanupTimer)
+			clearTimeout(state.cleanupTimer);
+		if (who)
+			who._touchContext = null;
+	};
+
+	var makeTouchContextMouseEvent = function(state, button) {
+		var point = state.point;
+		var target = state.target;
+		var eventType = state.isTouch ? "touchstart" : "mousedown";
+		var originalEvent = {
+			type: eventType,
+			target: target,
+			pageX: point.x,
+			pageY: point.y,
+			button: button,
+			buttons: (button == 2 ? 2 : 0),
+			which: (button == 2 ? 3 : 1),
+			preventDefault: function() {},
+			stopPropagation: function() {}
+		};
+		return {
+			type: eventType,
+			target: target,
+			pageX: point.x,
+			pageY: point.y,
+			button: button,
+			buttons: (button == 2 ? 2 : 0),
+			which: (button == 2 ? 3 : 1),
+			originalEvent: originalEvent,
+			preventDefault: function() {},
+			stopPropagation: function() {}
+		};
+	};
+
+	var dispatchTrackpadContextMouseEvent = function(state, type, button, buttons) {
+		var target = state.target;
+		if (!target || !target.dispatchEvent || typeof MouseEvent == "undefined")
+			return false;
+		var scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+		var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+		var event = new MouseEvent(type, {
+			bubbles: true,
+			cancelable: true,
+			view: window,
+			clientX: state.point.x - scrollX,
+			clientY: state.point.y - scrollY,
+			button: button,
+			buttons: buttons
+		});
+		target.dispatchEvent(event);
+		return true;
+	};
+
+	var fireTouchContextMenu = function(who, state) {
+		if (!state || state.triggered || !who || !who.applet)
+			return;
+		state.triggered = true;
+		if (state.timer) {
+			clearTimeout(state.timer);
+			state.timer = null;
+		}
+		// A browser can issue pointercancel for a long hold before it allows the
+		// timer callback to run. Do not leave that cancelled gesture attached to
+		// the canvas after the context action has been delivered.
+		state.cleanupTimer = setTimeout(function() {
+			if (who._touchContext === state)
+				clearTouchContext(who);
+		}, 1000);
+
+		// Finish the ordinary touch press first. This prevents the selected marker
+		// from being left in a pressed/dragging state before its popup is opened.
+		var leftRelease = makeTouchContextMouseEvent(state, 0);
+		var xym = getXY(who, leftRelease, 502);
+		if (xym)
+			who.applet._processEvent(502, xym, leftRelease, who._frameViewer);
+		who.isDown = false;
+		who.isDragging = false;
+		J2S.setMouseOwner(null);
+		if (!state.isTouch && dispatchTrackpadContextMouseEvent(state, "mousedown", 2, 2)) {
+			// Route the synthetic right-click through the DOM so it follows exactly
+			// the same SwingJS path as a two-finger trackpad press. The physical
+			// primary-button release that follows must not create an extra click.
+			who._suppressContextMouseUp = true;
+			clearTouchContext(who);
+			J2S._lastTouchContextMenu = { time: Date.now(), target: getTapControl(state.target) };
+			dispatchTrackpadContextMouseEvent(state, "mouseup", 2, 0);
+			return;
+		}
+
+		var rightDown = makeTouchContextMouseEvent(state, 2);
+		xym = getXY(who, rightDown, 0);
+		if (!xym)
+			return;
+		who.applet._processEvent(501, xym, rightDown, who._frameViewer);
+		var rightRelease = makeTouchContextMouseEvent(state, 2);
+		xym = getXY(who, rightRelease, 502);
+		if (xym)
+			who.applet._processEvent(502, xym, rightRelease, who._frameViewer);
+		J2S._lastTouchContextMenu = { time: Date.now(), target: getTapControl(state.target) };
+	};
+
+	var prepareTouchContext = function(who, ev) {
+		var isTouch = isTouchEvent(ev);
+		// A physical trackpad press reaches us as mousedown, whereas a touch
+		// screen uses pointerdown/touchstart. Both primary-button gestures can
+		// become a two-second context press; button 3 remains the native popup.
+		if (!isTouch && (ev.type != "mousedown" || ev.button != 0))
+			return null;
+		var state = who._touchContext;
+		var isNewPress = ev.type == "pointerdown" || ev.type == "touchstart" ||
+			ev.type == "mousedown";
+		// Mobile Safari may omit the release after a context hold. Never let that
+		// completed gesture swallow the next real press on the same canvas/control.
+		if (state && state.triggered && isNewPress) {
+			clearTouchContext(who);
+			state = null;
+		}
+		var point = getRawEventPoint(ev);
+		if (!state) {
+			// A new canvas contact is also an explicit click outside any open
+			// context menu. Do this before dispatching the Java press because menu
+			// overlays can otherwise retain capture on mobile Safari.
+			var role = ev.target && ev.target.getAttribute && ev.target.getAttribute("role");
+			if (!role && J2S.Swing && J2S.Swing.hideMenus)
+				J2S.Swing.hideMenus(who.applet);
+			state = who._touchContext = {
+				point: point,
+				target: ev.target,
+				isTouch: isTouch,
+				pointerIDs: {},
+				triggered: false,
+				timer: null
+			};
+			state.timer = setTimeout(function() {
+				if (who._touchContext === state)
+					fireTouchContextMenu(who, state);
+			}, 2000);
+		}
+		var oe = ev.originalEvent || ev;
+		if (isTouchPointerEvent(ev) && oe.pointerId != null)
+			state.pointerIDs[oe.pointerId] = true;
+		if ((oe.touches && oe.touches.length >= 2) ||
+			Object.keys(state.pointerIDs).length >= 2)
+			fireTouchContextMenu(who, state);
+		return state;
+	};
+
+	var updateTouchContext = function(who, ev) {
+		var state = who._touchContext;
+		if (!state || (state.isTouch ? !isTouchEvent(ev) : ev.type != "mousemove"))
+			return false;
+		if (state.triggered) {
+			stopTouchEvent(ev);
+			return true;
+		}
+		var point = getRawEventPoint(ev);
+		var dx = point.x - state.point.x;
+		var dy = point.y - state.point.y;
+		if (dx * dx + dy * dy > 144)
+			clearTouchContext(who); // movement turns a hold into the normal drag
+		return false;
+	};
+
+	var finishTouchContext = function(who, ev) {
+		var state = who._touchContext;
+		if (!state || (state.isTouch ? !isTouchEvent(ev) : ev.type != "mouseup"))
+			return false;
+		var oe = ev.originalEvent || ev;
+		if (isTouchPointerEvent(ev) && oe.pointerId != null)
+			delete state.pointerIDs[oe.pointerId];
+		if ((ev.type == "pointercancel" || ev.type == "touchcancel") && !state.triggered) {
+			// Firefox and mobile WebKit can cancel the pointer stream while the
+			// browser is considering a long hold. Preserve the timer so the hold
+			// still becomes the requested context action.
+			stopTouchEvent(ev);
+			return true;
+		}
+		if (!state.triggered) {
+			clearTouchContext(who);
+			return false;
+		}
+		var fingersRemain = (oe.touches && oe.touches.length) ||
+			Object.keys(state.pointerIDs).length;
+		if (!fingersRemain)
+			clearTouchContext(who);
+		who.isDown = false;
+		who.isDragging = false;
+		J2S.setMouseOwner(null);
+		if (state.isTouch)
+			J2S._lastTouchPointerUp = Date.now();
+		stopTouchEvent(ev);
+		return true;
+	};
+
 	J2S.$bind('body', //'pointerdown pointermove 
 		'mousedown mousemove mouseup', function(ev) {
+		if (!isCompatibilityMouseEvent(ev))
 		J2S._haveMouse = true;
 	});
 	
@@ -1825,6 +2081,32 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// prevent touch dragging
 		if (who.applet == null)
 			return;
+		var touchContext = prepareTouchContext(who, ev);
+		if (touchContext && touchContext.triggered) {
+			stopTouchEvent(ev);
+			return true;
+		}
+		if (isTouchPointerEvent(ev)) {
+			var pointerDownPoint = getRawEventPoint(ev);
+			J2S._lastTouchPointerDown = {
+				time: Date.now(),
+				x: pointerDownPoint.x,
+				y: pointerDownPoint.y
+			};
+		} else if (ev.type == "touchstart" && J2S._lastTouchPointerDown &&
+			Date.now() - J2S._lastTouchPointerDown.time < 500) {
+			// Modern mobile Chrome emits pointerdown and touchstart for one finger.
+			// The pointer event is retained because it remains deliverable when a
+			// pressed Swing button repaints and replaces its icon canvas.
+			return true;
+		} else if (ev.type == "touchstart") {
+			var touchDownPoint = getRawEventPoint(ev);
+			J2S._lastTouchPointerDown = {
+				time: Date.now(),
+				x: touchDownPoint.x,
+				y: touchDownPoint.y
+			};
+		}
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"DOWN", ev);
 
@@ -1832,8 +2114,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// otherwise, if J2S._firstTouch is undefined (!!x != x), set J2S._firstTouch
 		// and ignore future touch events (through the first touchend):
 		
-		if (//ev.type == "pointerdown" || 
-			ev.type == "mousedown") {// BHTEst
+		if (ev.type == "mousedown") {// BHTEst
+			if (isCompatibilityMouseEvent(ev))
+				return true;
 		    J2S._haveMouse = true;
 		} else { 
 		    if (J2S._haveMouse) return;
@@ -1883,6 +2166,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		
 		if (who.applet == null)
 			return;
+		if (updateTouchContext(who, ev))
+			return true;
 
 		if (ev.type == "touchmove" && 
 				(J2S._firstTouch || J2S._haveMouse)) {
@@ -1929,8 +2214,44 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				J2S._dmouseOwner = null;
 			}
 		}
+		// A pressed toolbar button can repaint and replace its DOM node before
+		// pointerup. The body-level release then arrives without a bound `who`;
+		// route it to the component that owned the original press.
+		var orphanedRelease = !who && J2S._mouseOwner;
+		if (orphanedRelease)
+			who = J2S._mouseOwner;
 		if (!who || who.applet == null)
 			return;
+		if (!orphanedRelease && ev.type == "mouseup" && isCompatibilityMouseEvent(ev))
+			return true;
+		if (who._suppressContextMouseUp && ev.type == "mouseup" && ev.button == 0) {
+			who._suppressContextMouseUp = false;
+		who.isDown = false;
+			who.isDragging = false;
+			J2S.setMouseOwner(null);
+			stopTouchEvent(ev);
+			return true;
+		}
+		if (finishTouchContext(who, ev))
+			return true;
+		if (ev.type == "touchend" && J2S._lastTouchPointerUp &&
+			Date.now() - J2S._lastTouchPointerUp < 500) {
+			// pointerup already completed this tap. Ignore the matching legacy
+			// touchend if the browser also delivers it.
+			return true;
+		}
+		var completesTouchTap = ev.type == "touchend" || isTouchPointerEvent(ev);
+		var isTouchTap = completesTouchTap;
+		if (completesTouchTap && J2S._lastTouchPointerDown) {
+			var pointerUpPoint = getRawEventPoint(ev);
+			var dx = pointerUpPoint.x - J2S._lastTouchPointerDown.x;
+			var dy = pointerUpPoint.y - J2S._lastTouchPointerDown.y;
+			// A horizontal toolbar swipe must scroll without activating whichever
+			// control happens to be beneath the finger at release.
+			isTouchTap = dx * dx + dy * dy <= 144;
+		}
+		if (isTouchPointerEvent(ev))
+			J2S._lastTouchPointerUp = Date.now();
 		who.isDown = false;
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"UP", ev);
@@ -1967,9 +2288,24 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		
 		if (ev.type != "touchend" || !J2S._gestureUpdate(who, ev)) {
 			var xym = getXY(who, ev, 502);
-			if (xym)
+			if (xym) {
 				who.applet._processEvent(502, xym, ev, who._frameViewer);// MouseEvent.MOUSE_RELEASED
+				// Mobile Chrome does not always synthesize a click after SwingJS
+				// handles touchend. Tracker's popup toolbar controls (Open, Save,
+				// calibration, measuring tools, display and zoom) deliberately open
+				// their menus from MouseEvent.MOUSE_CLICKED, so press/release alone
+				// leaves them inert. Complete a non-gesture tap with one Java click.
+				if (completesTouchTap && isTouchTap && who.applet) {
+					who.applet._processEvent(500, xym, ev, who._frameViewer);// MouseEvent.MOUSE_CLICKED
+					J2S._lastTouchClick = {
+						time: Date.now(),
+						target: getTapControl(ev.target)
+					};
+				}
+			}
 		}
+		if (completesTouchTap)
+			J2S._lastTouchPointerDown = null;
 					
 		return !!(ui || target);
 	}
@@ -1979,6 +2315,26 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		if (who.applet == null) {
 			who.isDown = false;
 			return;
+		}
+		
+		// Some browsers still emit a compatibility click after touchend. The
+		// touch path above has already delivered the Java click, so suppress only
+		// that same control's immediate duplicate.
+		var lastTouchClick = J2S._lastTouchClick;
+		if (lastTouchClick && Date.now() - lastTouchClick.time < 800 &&
+			lastTouchClick.target == getTapControl(ev.target)) {
+			J2S._lastTouchClick = null;
+			ev.preventDefault();
+			ev.stopPropagation();
+			return true;
+		}
+		var lastTouchContextMenu = J2S._lastTouchContextMenu;
+		if (lastTouchContextMenu && Date.now() - lastTouchContextMenu.time < 800 &&
+			lastTouchContextMenu.target == getTapControl(ev.target)) {
+			J2S._lastTouchContextMenu = null;
+			ev.preventDefault();
+			ev.stopPropagation();
+			return true;
 		}
 		
 		if (who.isDown) {
@@ -2099,8 +2455,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		J2S.$bind(who, (J2S._haveMouse ? 'mousedown pointerdown' : 'pointerdown mousedown touchstart'), 
 				function(ev) { return mouseDown(who, ev) });
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mouseup pointerup' : // 'pointerup 
-		'mouseup touchend'), 
+		J2S.$bind(who, (J2S._haveMouse ? 'mouseup pointerup pointercancel' :
+		'pointerup pointercancel mouseup touchend touchcancel'),
 				function(ev) { return mouseUp(who, ev) });
 
 		J2S.$bind(who, 'pointerenter mouseenter', function(ev) { return mouseEnter(who, ev) });
@@ -2138,7 +2494,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				'mouseupoutjsmol click touchoutjsmol pointerupoutjsmol '
 				+'mousedown pointerdown touchstart '
 				+'mousemove touchmove pointermove ' 
-				+'mouseup pointerup touchend '
+				+'mouseup pointerup pointercancel touchend touchcancel '
 				+'DOMMouseScroll mousewheel contextmenu '
 				+'mouseleave mouseenter mousemoveoutjsmol '
 				+'pointerout pointerenter pointermoveoutjsmol ',
@@ -2276,11 +2632,94 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var x, y;
 		var oe = ev.originalEvent;
 		// drag-drop jQuery event is missing pageX
-		oe.targetTouches && (oe = oe.targetTouches[0]);
-		ev.pageX || (ev.pageX = oe ? oe.pageX : J2S._mousePageX);
-		ev.pageY || (ev.pageY = oe ? oe.pageY : J2S._mousePageY);
+		// A touchend has no targetTouches. Use changedTouches so its release
+		// coordinate is the same physical point as touchstart. Falling back to
+		// J2S._mousePageX/Y here is unsafe after mobile toolbar remapping because
+		// those values already contain the translated Swing coordinates and would
+		// be translated a second time.
+		if (oe && oe.targetTouches && oe.targetTouches.length) {
+			oe = oe.targetTouches[0];
+		} else if (oe && oe.changedTouches && oe.changedTouches.length) {
+			oe = oe.changedTouches[0];
+		}
+		if (ev.pageX == null || !isFinite(ev.pageX))
+			ev.pageX = oe && oe.pageX != null ? oe.pageX : J2S._mousePageX;
+		if (ev.pageY == null || !isFinite(ev.pageY))
+			ev.pageY = oe && oe.pageY != null ? oe.pageY : J2S._mousePageY;
 		x = J2S._mousePageX = Math.round(ev.pageX);
 		y = J2S._mousePageY = Math.round(ev.pageY);
+
+		// TrackerStudentMobile enlarges and reflows the Swing toolbar in CSS so
+		// its controls are usable by touch. SwingJS normally hit-tests the Java
+		// component tree with raw page coordinates, which still correspond to
+		// the toolbar's original inline bounds. Map a pointer inside an enhanced
+		// control back into those logical bounds before dispatching the event.
+		// This preserves the native action, popup menu, and dialog for every
+		// toolbar button without replacing any Tracker functionality.
+		var eventTarget = ev.target || (oe && oe.target);
+		var control = eventTarget && eventTarget.closest &&
+			eventTarget.closest(".tracker-mobile-toolbar > .tracker-toolbar-control, .tracker-mobile-remapped-control");
+		if (control && !control.classList.contains("tracker-toolbar-separator") &&
+			!(oe && oe.trackerLogicalCoordinates)) {
+			var toolbar = control.parentElement;
+			var toolbarShell = toolbar.parentElement;
+			var visualBounds = control.getBoundingClientRect();
+			var toolbarBounds = toolbar.getBoundingClientRect();
+			var remappedWindow = control.classList.contains("tracker-mobile-remapped-control") &&
+				control.closest(".tracker-mobile-responsive-window");
+			var savedBounds = (control.getAttribute("data-tracker-logical-bounds") || "").split(",");
+			var logicalLeft = parseFloat(savedBounds[0] || control.style.left);
+			var logicalTop = parseFloat(savedBounds[1] || control.style.top);
+			var logicalWidth = parseFloat(savedBounds[2] || control.style.width);
+			var logicalHeight = parseFloat(savedBounds[3] || control.style.height);
+			if (visualBounds.width > 0 && visualBounds.height > 0 &&
+				isFinite(logicalLeft) && isFinite(logicalTop) &&
+				isFinite(logicalWidth) && isFinite(logicalHeight)) {
+				var pageScrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
+				var pageScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+				var toolbarScrollX = toolbarShell.scrollLeft || 0;
+				var toolbarScrollY = toolbarShell.scrollTop || 0;
+				// Swing may place its compact overflow button partially beyond the
+				// frame edge. Keep the translated point inside the portion that the
+				// Java component tree can actually hit-test.
+				var logicalHitWidth = Math.min(logicalWidth,
+					Math.max(1, toolbarShell.clientWidth - logicalLeft));
+				var logicalHitHeight = Math.min(logicalHeight,
+					Math.max(1, toolbarShell.clientHeight - logicalTop));
+				var relativeX = Math.max(0, Math.min(1,
+					(x - visualBounds.left - pageScrollX) / visualBounds.width));
+				var relativeY = Math.max(0, Math.min(1,
+					(y - visualBounds.top - pageScrollY) / visualBounds.height));
+				var logicalBaseLeft = toolbarBounds.left + pageScrollX + toolbarScrollX;
+				var logicalBaseTop = toolbarBounds.top + pageScrollY + toolbarScrollY;
+				if (remappedWindow && remappedWindow.parentElement) {
+					/* A responsive secondary window is position:fixed while Swing's
+					 * component model remains at the original centered desktop host.
+					 * Rebuild the original nested inline offset so Java receives the
+					 * same coordinate it would have received before the mobile reflow. */
+					var hostBounds = remappedWindow.parentElement.getBoundingClientRect();
+					var ancestor = control.parentElement;
+					var ancestorLeft = 0;
+					var ancestorTop = 0;
+					while (ancestor && ancestor !== remappedWindow) {
+						var ancestorPosition = window.getComputedStyle(ancestor).position;
+						if (ancestorPosition !== "static") {
+							var ancestorInlineLeft = parseFloat(ancestor.style.left);
+							var ancestorInlineTop = parseFloat(ancestor.style.top);
+							if (isFinite(ancestorInlineLeft)) ancestorLeft += ancestorInlineLeft;
+							if (isFinite(ancestorInlineTop)) ancestorTop += ancestorInlineTop;
+						}
+						ancestor = ancestor.parentElement;
+					}
+					logicalBaseLeft = hostBounds.left + pageScrollX + ancestorLeft;
+					logicalBaseTop = hostBounds.top + pageScrollY + ancestorTop;
+				}
+				x = Math.round(logicalBaseLeft + logicalLeft + relativeX * logicalHitWidth);
+				y = Math.round(logicalBaseTop + logicalTop + relativeY * logicalHitHeight);
+				J2S._mousePageX = x;
+				J2S._mousePageY = y;
+			}
+		}
 		return [ Math.round(x - offsets.left), Math.round(y - offsets.top), mods];
 	}
 	
@@ -3405,7 +3844,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return drag && drag(fixTouch(ev));
 		});
 
-		$tag.bind('pointerup mouseup touchend', function(ev) {
+		$tag.bind('pointerup pointercancel mouseup touchend touchcancel', function(ev) {
 			// touchend does not express a position, and we don't use it anyway
 			return up && up(ev);
 		});
