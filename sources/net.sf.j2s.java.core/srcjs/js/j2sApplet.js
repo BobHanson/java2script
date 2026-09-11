@@ -3990,4 +3990,166 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	J2S.getCaller = function() { return arguments.callee.caller.caller}
 
+	  J2S.Mobile = {
+
+		addNumberPad : function(jc) {
+			jc.getUI$().domNode.addEventListener(self.PointerEvent ? "pointerdown" : "touchstart",
+				function(ev) {
+					var oe = ev.originalEvent || ev;
+					if (oe.isPrimary === false)
+						return;
+					ev.preventDefault();
+					ev.stopPropagation();
+					J2S.Mobile.showNumberPad(jc);
+				}, true);
+		},
+		showNumberPad : function(jc) {
+			J2S.Mobile.closeNumberPad();
+
+			var field = jc.getUI$().domNode;
+
+			var state = {
+				value : field.value || "",
+				replace : true
+			};
+			var decimal = jc.getDecimalSeparator$();
+			var overlay = document.createElement("div");
+			overlay.id = "j2s_mobile_number_pad";
+			overlay.setAttribute("role", "dialog");
+			overlay.setAttribute("aria-modal", "true");
+			overlay.setAttribute("aria-label", "Numeric keypad");
+			overlay.style.cssText = "position:fixed;inset:0;z-index:1000002;"
+					+ "background:rgba(0,0,0,.25);display:flex;align-items:flex-end;"
+					+ "justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));"
+					+ "box-sizing:border-box";
+
+			var panel = document.createElement("div");
+			panel.style.cssText = "width:min(360px,100%);background:#f4f4f6;border-radius:14px;"
+					+ "padding:12px;box-sizing:border-box;box-shadow:0 4px 24px rgba(0,0,0,.35);"
+					+ "font:20px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+			var display = document.createElement("input");
+			display.type = "text";
+			display.readOnly = true;
+			display.setAttribute("aria-label", "Value");
+			display.style.cssText = "display:block;width:100%;height:48px;margin:0 0 10px;"
+					+ "box-sizing:border-box;border:1px solid #aaa;border-radius:8px;"
+					+ "background:white;color:#111;text-align:right;padding:6px 12px;font:24px monospace";
+			var grid = document.createElement("div");
+			grid.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:7px";
+
+			var refresh = function() {
+				display.value = state.value;
+			};
+			var appendDigit = function(digit) {
+				if (state.replace) {
+					state.value = digit;
+					state.replace = false;
+				} else {
+					state.value += digit;
+				}
+				refresh();
+			};
+			var appendDecimal = function() {
+				if (state.replace) {
+					state.value = "0" + decimal;
+					state.replace = false;
+				} else if (!/[eE]/.test(state.value)
+						&& state.value.indexOf(decimal) < 0) {
+					state.value += decimal;
+				}
+				refresh();
+			};
+			var toggleSign = function() {
+				var exponent = Math.max(state.value.indexOf("e"), state.value.indexOf("E"));
+				var signAt = exponent < 0 ? 0 : exponent + 1;
+				if (state.value.charAt(signAt) == "-")
+					state.value = state.value.substring(0, signAt)
+							+ state.value.substring(signAt + 1);
+				else
+					state.value = state.value.substring(0, signAt) + "-"
+							+ state.value.substring(signAt);
+				state.replace = false;
+				refresh();
+			};
+			var makeButton = function(label, action, accent) {
+				var button = document.createElement("button");
+				button.type = "button";
+				button.tabIndex = -1;
+				button.textContent = label;
+				button.style.cssText = "min-height:48px;border:0;border-radius:8px;"
+						+ "background:" + (accent ? "#1769aa" : "white") + ";"
+						+ "color:" + (accent ? "white" : "#111") + ";font:inherit;"
+						+ "font-weight:" + (accent ? "600" : "400") + ";touch-action:manipulation";
+				button.addEventListener(self.PointerEvent ? "pointerdown" : "mousedown", function(ev) {
+					// Keep the NumberField focused until Done so its focus-lost listener
+					// cannot end an on-video edit before the keypad value is committed.
+					ev.preventDefault();
+				});
+				button.addEventListener("click", function(ev) {
+					ev.preventDefault();
+					ev.stopPropagation();
+					action();
+				});
+				grid.appendChild(button);
+				return button;
+			};
+
+			[ "7", "8", "9" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton("⌫", function() {
+				state.value = state.replace ? "" : state.value.slice(0, -1);
+				state.replace = false;
+				refresh();
+			});
+			[ "4", "5", "6" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton("+/−", toggleSign);
+			[ "1", "2", "3" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton(decimal, appendDecimal);
+			makeButton("0", function() { appendDigit("0"); });
+			makeButton("E", function() {
+				if (state.value && !/[eE]/.test(state.value)) {
+					state.value += "E";
+					state.replace = false;
+					refresh();
+				}
+			});
+			makeButton("Clear", function() {
+				state.value = "";
+				state.replace = false;
+				refresh();
+			});
+			var done = makeButton("Done", function() {
+				jc.setValue$D(+state.value);
+				field.blur();
+				J2S.Mobile.closeNumberPad();
+			}, true);
+			var cancel = makeButton("Cancel", function() {
+				field.blur();
+				J2S.Mobile.closeNumberPad();
+			});
+			cancel.style.gridColumn = "1 / -1";
+
+			panel.appendChild(display);
+			panel.appendChild(grid);
+			overlay.appendChild(panel);
+			overlay.addEventListener("click", function(ev) {
+				if (ev.target == overlay) {
+					field.blur();
+					J2S.Mobile.closeNumberPad();
+				}
+			});
+			document.body.appendChild(overlay);
+			refresh();
+		},
+		closeNumberPad : function() {
+			var pad = document.getElementById("j2s_mobile_number_pad");
+			pad && pad.parentNode.removeChild(pad);
+		}
+	}
+
 })(self.J2S, self.jQuery, window, document);
