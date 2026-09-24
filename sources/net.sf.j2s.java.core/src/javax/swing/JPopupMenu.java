@@ -28,20 +28,20 @@
 
 package javax.swing;
 
-import java.util.Vector;
-
 import java.awt.AWTEvent;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.JSFrame;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.JSComponent;
+import java.awt.JSFrame;
 import java.awt.Point;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Vector;
+
 import javax.swing.event.EventListenerList;
 import javax.swing.event.MenuKeyEvent;
 import javax.swing.event.MenuKeyListener;
@@ -375,8 +375,8 @@ public class JPopupMenu extends JComponent implements MenuElement {
                 return pcl;
             }
         };
-        mi.setHorizontalTextPosition(JButton.TRAILING);
-        mi.setVerticalTextPosition(JButton.CENTER);
+        mi.setHorizontalTextPosition(SwingConstants.TRAILING);
+        mi.setVerticalTextPosition(SwingConstants.CENTER);
         return mi;
     }
 
@@ -682,7 +682,8 @@ public class JPopupMenu extends JComponent implements MenuElement {
     }
 
     
-    public void hide() {
+    @Override
+	public void hide() {
     	System.out.println("JPopupMenu hide");
     	super.hide();
     }
@@ -1510,7 +1511,7 @@ public class JPopupMenu extends JComponent implements MenuElement {
 	 */
 	static public class Separator extends JSeparator {
 		public Separator() {
-			super(JSeparator.HORIZONTAL);
+			super(SwingConstants.HORIZONTAL);
 		}
 		
 		@Override

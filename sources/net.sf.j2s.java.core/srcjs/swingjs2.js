@@ -10687,9 +10687,12 @@ return jQuery;
 // j2sApplet.js 
 
 // BH = Bob Hanson hansonr@stolaf.edu 
+// AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
-// WC 2026.09.10 ChatGPT-plus AI-generated touch improvements
+// WC 2026.09.23 removing tracker-mobile references
+// AI 2026.09.22 ChatGPT-plus AI-generated touch improvements
+// AI 2026.09.10 ChatGPT-plus AI-generated touch improvements
 // BH 2026.08.23 adds css touch-action none for resizer
 // BH 2025.10.28 moves template.html getClassList to here as J2S.getClassList(optionalName)
 // BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
@@ -12469,6 +12472,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	var isCompatibilityMouseEvent = function(ev) {
 		var oe = ev.originalEvent || ev;
 		return !!(oe.sourceCapabilities && oe.sourceCapabilities.firesTouchEvents) ||
+			(!!J2S._lastPointerDown &&
+				Date.now() - J2S._lastPointerDown.time < 500) ||
+			(!!J2S._lastPointerUp &&
+				Date.now() - J2S._lastPointerUp < 500) ||
 			(!!J2S._lastTouchPointerDown &&
 				Date.now() - J2S._lastTouchPointerDown.time < 800) ||
 			(!!J2S._lastTouchPointerUp &&
@@ -12793,6 +12800,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				y: touchDownPoint.y
 			};
 		}
+		if (ev.type == "pointerdown" && !isTouchPointerEvent(ev)) {
+			J2S._lastPointerDown = {
+				time: Date.now()
+			};
+		}
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"DOWN", ev);
 
@@ -12800,12 +12812,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// otherwise, if J2S._firstTouch is undefined (!!x != x), set J2S._firstTouch
 		// and ignore future touch events (through the first touchend):
 		
-		if (ev.type == "mousedown") {// BHTEst
-			if (isCompatibilityMouseEvent(ev))
+		if (ev.type == "mousedown" || (ev.type == "pointerdown" && !isTouchPointerEvent(ev))) {// BHTEst
+			if (ev.type == "mousedown" && isCompatibilityMouseEvent(ev))
 				return true;
 		    J2S._haveMouse = true;
 		} else { 
-		    if (J2S._haveMouse) return;
+		    // Mouse detection must not disable later touch input.
 		    if (!!J2S._firstTouch != J2S._firstTouch) {
 // q - why did we do this?
 //			J2S._firstTouch = true;
@@ -12856,7 +12868,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return true;
 
 		if (ev.type == "touchmove" && 
-				(J2S._firstTouch || J2S._haveMouse)) {
+				J2S._firstTouch) {
 			return;
 		}
 		
@@ -12938,6 +12950,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 		if (isTouchPointerEvent(ev))
 			J2S._lastTouchPointerUp = Date.now();
+		else if (ev.type == "pointerup")
+			J2S._lastPointerUp = Date.now();
 		who.isDown = false;
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"UP", ev);
@@ -12946,7 +12960,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// and set J2S.firstTouch false:
 			
 		if (ev.type == "touchend") {
-		    if (J2S._haveMouse) return;
+		    // Mouse detection must not disable later touch input.
 		    if (J2S._firstTouch) {
 		    	J2S._firstTouch = false;
 		        return;
@@ -13131,18 +13145,17 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// swingjs.api.J2SInterface
 
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mousemove pointermove' : 'pointermove mousemove touchmove'), 
+		J2S.$bind(who, 'pointermove mousemove touchmove', 
 				function(ev) { return mouseMove(who, ev) });
 
 		J2S.$bind(who, 'click', function(ev) { return mouseClick(who, ev) });
 		
 		J2S.$bind(who, 'DOMMouseScroll mousewheel', function(ev) { return mouseWheel(who, ev) });
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mousedown pointerdown' : 'pointerdown mousedown touchstart'), 
+		J2S.$bind(who, 'pointerdown mousedown touchstart', 
 				function(ev) { return mouseDown(who, ev) });
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mouseup pointerup pointercancel' :
-		'pointerup pointercancel mouseup touchend touchcancel'),
+		J2S.$bind(who, 'pointerup pointercancel mouseup touchend touchcancel',
 				function(ev) { return mouseUp(who, ev) });
 
 		J2S.$bind(who, 'pointerenter mouseenter', function(ev) { return mouseEnter(who, ev) });
@@ -13319,10 +13332,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var oe = ev.originalEvent;
 		// drag-drop jQuery event is missing pageX
 		// A touchend has no targetTouches. Use changedTouches so its release
-		// coordinate is the same physical point as touchstart. Falling back to
-		// J2S._mousePageX/Y here is unsafe after mobile toolbar remapping because
-		// those values already contain the translated Swing coordinates and would
-		// be translated a second time.
+		// coordinate is the same physical point as touchstart.
 		if (oe && oe.targetTouches && oe.targetTouches.length) {
 			oe = oe.targetTouches[0];
 		} else if (oe && oe.changedTouches && oe.changedTouches.length) {
@@ -13335,77 +13345,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		x = J2S._mousePageX = Math.round(ev.pageX);
 		y = J2S._mousePageY = Math.round(ev.pageY);
 
-		// TrackerStudentMobile enlarges and reflows the Swing toolbar in CSS so
-		// its controls are usable by touch. SwingJS normally hit-tests the Java
-		// component tree with raw page coordinates, which still correspond to
-		// the toolbar's original inline bounds. Map a pointer inside an enhanced
-		// control back into those logical bounds before dispatching the event.
-		// This preserves the native action, popup menu, and dialog for every
-		// toolbar button without replacing any Tracker functionality.
-		var eventTarget = ev.target || (oe && oe.target);
-		var control = eventTarget && eventTarget.closest &&
-			eventTarget.closest(".tracker-mobile-toolbar > .tracker-toolbar-control, .tracker-mobile-remapped-control");
-		if (control && !control.classList.contains("tracker-toolbar-separator") &&
-			!(oe && oe.trackerLogicalCoordinates)) {
-			var toolbar = control.parentElement;
-			var toolbarShell = toolbar.parentElement;
-			var visualBounds = control.getBoundingClientRect();
-			var toolbarBounds = toolbar.getBoundingClientRect();
-			var remappedWindow = control.classList.contains("tracker-mobile-remapped-control") &&
-				control.closest(".tracker-mobile-responsive-window");
-			var savedBounds = (control.getAttribute("data-tracker-logical-bounds") || "").split(",");
-			var logicalLeft = parseFloat(savedBounds[0] || control.style.left);
-			var logicalTop = parseFloat(savedBounds[1] || control.style.top);
-			var logicalWidth = parseFloat(savedBounds[2] || control.style.width);
-			var logicalHeight = parseFloat(savedBounds[3] || control.style.height);
-			if (visualBounds.width > 0 && visualBounds.height > 0 &&
-				isFinite(logicalLeft) && isFinite(logicalTop) &&
-				isFinite(logicalWidth) && isFinite(logicalHeight)) {
-				var pageScrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
-				var pageScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-				var toolbarScrollX = toolbarShell.scrollLeft || 0;
-				var toolbarScrollY = toolbarShell.scrollTop || 0;
-				// Swing may place its compact overflow button partially beyond the
-				// frame edge. Keep the translated point inside the portion that the
-				// Java component tree can actually hit-test.
-				var logicalHitWidth = Math.min(logicalWidth,
-					Math.max(1, toolbarShell.clientWidth - logicalLeft));
-				var logicalHitHeight = Math.min(logicalHeight,
-					Math.max(1, toolbarShell.clientHeight - logicalTop));
-				var relativeX = Math.max(0, Math.min(1,
-					(x - visualBounds.left - pageScrollX) / visualBounds.width));
-				var relativeY = Math.max(0, Math.min(1,
-					(y - visualBounds.top - pageScrollY) / visualBounds.height));
-				var logicalBaseLeft = toolbarBounds.left + pageScrollX + toolbarScrollX;
-				var logicalBaseTop = toolbarBounds.top + pageScrollY + toolbarScrollY;
-				if (remappedWindow && remappedWindow.parentElement) {
-					/* A responsive secondary window is position:fixed while Swing's
-					 * component model remains at the original centered desktop host.
-					 * Rebuild the original nested inline offset so Java receives the
-					 * same coordinate it would have received before the mobile reflow. */
-					var hostBounds = remappedWindow.parentElement.getBoundingClientRect();
-					var ancestor = control.parentElement;
-					var ancestorLeft = 0;
-					var ancestorTop = 0;
-					while (ancestor && ancestor !== remappedWindow) {
-						var ancestorPosition = window.getComputedStyle(ancestor).position;
-						if (ancestorPosition !== "static") {
-							var ancestorInlineLeft = parseFloat(ancestor.style.left);
-							var ancestorInlineTop = parseFloat(ancestor.style.top);
-							if (isFinite(ancestorInlineLeft)) ancestorLeft += ancestorInlineLeft;
-							if (isFinite(ancestorInlineTop)) ancestorTop += ancestorInlineTop;
-						}
-						ancestor = ancestor.parentElement;
-					}
-					logicalBaseLeft = hostBounds.left + pageScrollX + ancestorLeft;
-					logicalBaseTop = hostBounds.top + pageScrollY + ancestorTop;
-				}
-				x = Math.round(logicalBaseLeft + logicalLeft + relativeX * logicalHitWidth);
-				y = Math.round(logicalBaseTop + logicalTop + relativeY * logicalHitHeight);
-				J2S._mousePageX = x;
-				J2S._mousePageY = y;
-			}
-		}
 		return [ Math.round(x - offsets.left), Math.round(y - offsets.top), mods];
 	}
 	
@@ -14585,6 +14524,16 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			z = modalZ - 500;
 		}
 		node.ui.outerNode && (node.ui.outerNode.style.zIndex = z);
+		// Cached popup menus live outside their owner's DOM tree. Window
+		// activation must restack them too, including currently hidden menus.
+		// Otherwise a reused menu can appear behind its owner after a dialog.
+		var menus = node.ui.applet && node.ui.applet._menus;
+		for (var id in menus) {
+			var menu = menus[id];
+			var invoker = menu.getInvoker$ && menu.getInvoker$();
+			if (menu.ui && invoker && invoker.ui)
+				menu.ui.setZ$I(invoker.ui.getInheritedZ$() + 2);
+		}
 		return z;
 	}
 
@@ -14678,168 +14627,167 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	  J2S.Mobile = {
 
-			  closeNumberPad : function() {
-					var pad = document.getElementById("j2s_mobile_number_pad");
-					pad && pad.parentNode.removeChild(pad);
-				},
+		closeNumberPad : function() {
+			var pad = document.getElementById("j2s_mobile_number_pad");
+			pad && pad.parentNode.removeChild(pad);
+		},
+		
+		showNumberPad : function(jc) {
+			J2S.Mobile.closeNumberPad();
 
+			var field = jc.getUI$().domNode;
 
-			  showNumberPad : function(jc) {
-					J2S.Mobile.closeNumberPad();
+			var state = {
+				value : field.value || "",
+				replace : true
+			};
+			var decimal = jc.getDecimalSeparator$();
+			var overlay = document.createElement("div");
+			overlay.id = "j2s_mobile_number_pad";
+			overlay.setAttribute("role", "dialog");
+			overlay.setAttribute("aria-modal", "true");
+			overlay.setAttribute("aria-label", "Numeric keypad");
+			overlay.style.cssText = "position:fixed;inset:0;z-index:1000002;"
+					+ "background:rgba(0,0,0,.25);display:flex;align-items:flex-end;"
+					+ "justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));"
+					+ "box-sizing:border-box";
 
-					var field = jc.getUI$().domNode;
+			var panel = document.createElement("div");
+			panel.style.cssText = "width:min(360px,100%);background:#f4f4f6;border-radius:14px;"
+					+ "padding:12px;box-sizing:border-box;box-shadow:0 4px 24px rgba(0,0,0,.35);"
+					+ "font:20px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+			var display = document.createElement("input");
+			display.type = "text";
+			display.readOnly = true;
+			display.setAttribute("aria-label", "Value");
+			display.style.cssText = "display:block;width:100%;height:48px;margin:0 0 10px;"
+					+ "box-sizing:border-box;border:1px solid #aaa;border-radius:8px;"
+					+ "background:white;color:#111;text-align:right;padding:6px 12px;font:24px monospace";
+			var grid = document.createElement("div");
+			grid.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:7px";
 
-					var state = {
-						value : field.value || "",
-						replace : true
-					};
-					var decimal = jc.getDecimalSeparator$();
-					var overlay = document.createElement("div");
-					overlay.id = "j2s_mobile_number_pad";
-					overlay.setAttribute("role", "dialog");
-					overlay.setAttribute("aria-modal", "true");
-					overlay.setAttribute("aria-label", "Numeric keypad");
-					overlay.style.cssText = "position:fixed;inset:0;z-index:1000002;"
-							+ "background:rgba(0,0,0,.25);display:flex;align-items:flex-end;"
-							+ "justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));"
-							+ "box-sizing:border-box";
-
-					var panel = document.createElement("div");
-					panel.style.cssText = "width:min(360px,100%);background:#f4f4f6;border-radius:14px;"
-							+ "padding:12px;box-sizing:border-box;box-shadow:0 4px 24px rgba(0,0,0,.35);"
-							+ "font:20px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
-					var display = document.createElement("input");
-					display.type = "text";
-					display.readOnly = true;
-					display.setAttribute("aria-label", "Value");
-					display.style.cssText = "display:block;width:100%;height:48px;margin:0 0 10px;"
-							+ "box-sizing:border-box;border:1px solid #aaa;border-radius:8px;"
-							+ "background:white;color:#111;text-align:right;padding:6px 12px;font:24px monospace";
-					var grid = document.createElement("div");
-					grid.style.cssText = "display:grid;grid-template-columns:repeat(4,1fr);gap:7px";
-
-					var refresh = function() {
-						display.value = state.value;
-					};
-					var appendDigit = function(digit) {
-						if (state.replace) {
-							state.value = digit;
-							state.replace = false;
-						} else {
-							state.value += digit;
-						}
-						refresh();
-					};
-					var appendDecimal = function() {
-						if (state.replace) {
-							state.value = "0" + decimal;
-							state.replace = false;
-						} else if (!/[eE]/.test(state.value)
-								&& state.value.indexOf(decimal) < 0) {
-							state.value += decimal;
-						}
-						refresh();
-					};
-					var toggleSign = function() {
-						var exponent = Math.max(state.value.indexOf("e"), state.value.indexOf("E"));
-						var signAt = exponent < 0 ? 0 : exponent + 1;
-						if (state.value.charAt(signAt) == "-")
-							state.value = state.value.substring(0, signAt)
-									+ state.value.substring(signAt + 1);
-						else
-							state.value = state.value.substring(0, signAt) + "-"
-									+ state.value.substring(signAt);
-						state.replace = false;
-						refresh();
-					};
-					var makeButton = function(label, action, accent) {
-						var button = document.createElement("button");
-						button.type = "button";
-						button.tabIndex = -1;
-						button.textContent = label;
-						button.style.cssText = "min-height:48px;border:0;border-radius:8px;"
-								+ "background:" + (accent ? "#1769aa" : "white") + ";"
-								+ "color:" + (accent ? "white" : "#111") + ";font:inherit;"
-								+ "font-weight:" + (accent ? "600" : "400") + ";touch-action:manipulation";
-						button.addEventListener(self.PointerEvent ? "pointerdown" : "mousedown", function(ev) {
-							// Keep the NumberField focused until Done so its focus-lost listener
-							// cannot end an on-video edit before the keypad value is committed.
-							ev.preventDefault();
-						});
-						button.addEventListener("click", function(ev) {
-							ev.preventDefault();
-							ev.stopPropagation();
-							action();
-						});
-						grid.appendChild(button);
-						return button;
-					};
-
-					[ "7", "8", "9" ].forEach(function(digit) {
-						makeButton(digit, function() { appendDigit(digit); });
-					});
-					makeButton("⌫", function() {
-						state.value = state.replace ? "" : state.value.slice(0, -1);
-						state.replace = false;
-						refresh();
-					});
-					[ "4", "5", "6" ].forEach(function(digit) {
-						makeButton(digit, function() { appendDigit(digit); });
-					});
-					makeButton("+/−", toggleSign);
-					[ "1", "2", "3" ].forEach(function(digit) {
-						makeButton(digit, function() { appendDigit(digit); });
-					});
-					makeButton(decimal, appendDecimal);
-					makeButton("0", function() { appendDigit("0"); });
-					makeButton("E", function() {
-						if (state.value && !/[eE]/.test(state.value)) {
-							state.value += "E";
-							state.replace = false;
-							refresh();
-						}
-					});
-					makeButton("Clear", function() {
-						state.value = "";
-						state.replace = false;
-						refresh();
-					});
-					var done = makeButton("Done", function() {
-						jc.setValue$D(+state.value);
-						field.blur();
-						J2S.Mobile.closeNumberPad();
-					}, true);
-					var cancel = makeButton("Cancel", function() {
-						field.blur();
-						J2S.Mobile.closeNumberPad();
-					});
-					cancel.style.gridColumn = "1 / -1";
-
-					panel.appendChild(display);
-					panel.appendChild(grid);
-					overlay.appendChild(panel);
-					overlay.addEventListener("click", function(ev) {
-						if (ev.target == overlay) {
-							field.blur();
-							J2S.Mobile.closeNumberPad();
-						}
-					});
-					document.body.appendChild(overlay);
-					refresh();
-				},
-
-				addNumberPad : function(jc) {
-					jc.getUI$().domNode.addEventListener(self.PointerEvent ? "pointerdown" : "touchstart",
-						function(ev) {
-							var oe = ev.originalEvent || ev;
-							if (oe.isPrimary === false)
-								return;
-							ev.preventDefault();
-							ev.stopPropagation();
-							J2S.Mobile.showNumberPad(jc);
-						}, true);
+			var refresh = function() {
+				display.value = state.value;
+			};
+			var appendDigit = function(digit) {
+				if (state.replace) {
+					state.value = digit;
+					state.replace = false;
+				} else {
+					state.value += digit;
 				}
-	    }
+				refresh();
+			};
+			var appendDecimal = function() {
+				if (state.replace) {
+					state.value = "0" + decimal;
+					state.replace = false;
+				} else if (!/[eE]/.test(state.value)
+						&& state.value.indexOf(decimal) < 0) {
+					state.value += decimal;
+				}
+				refresh();
+			};
+			var toggleSign = function() {
+				var exponent = Math.max(state.value.indexOf("e"), state.value.indexOf("E"));
+				var signAt = exponent < 0 ? 0 : exponent + 1;
+				if (state.value.charAt(signAt) == "-")
+					state.value = state.value.substring(0, signAt)
+							+ state.value.substring(signAt + 1);
+				else
+					state.value = state.value.substring(0, signAt) + "-"
+							+ state.value.substring(signAt);
+				state.replace = false;
+				refresh();
+			};
+			var makeButton = function(label, action, accent) {
+				var button = document.createElement("button");
+				button.type = "button";
+				button.tabIndex = -1;
+				button.textContent = label;
+				button.style.cssText = "min-height:48px;border:0;border-radius:8px;"
+						+ "background:" + (accent ? "#1769aa" : "white") + ";"
+						+ "color:" + (accent ? "white" : "#111") + ";font:inherit;"
+						+ "font-weight:" + (accent ? "600" : "400") + ";touch-action:manipulation";
+				button.addEventListener(self.PointerEvent ? "pointerdown" : "mousedown", function(ev) {
+					// Keep the NumberField focused until Done so its focus-lost listener
+					// cannot end an on-video edit before the keypad value is committed.
+					ev.preventDefault();
+				});
+				button.addEventListener("click", function(ev) {
+					ev.preventDefault();
+					ev.stopPropagation();
+					action();
+				});
+				grid.appendChild(button);
+				return button;
+			};
+
+			[ "7", "8", "9" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton("⌫", function() {
+				state.value = state.replace ? "" : state.value.slice(0, -1);
+				state.replace = false;
+				refresh();
+			});
+			[ "4", "5", "6" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton("+/−", toggleSign);
+			[ "1", "2", "3" ].forEach(function(digit) {
+				makeButton(digit, function() { appendDigit(digit); });
+			});
+			makeButton(decimal, appendDecimal);
+			makeButton("0", function() { appendDigit("0"); });
+			makeButton("E", function() {
+				if (state.value && !/[eE]/.test(state.value)) {
+					state.value += "E";
+					state.replace = false;
+					refresh();
+				}
+			});
+			makeButton("Clear", function() {
+				state.value = "";
+				state.replace = false;
+				refresh();
+			});
+			var done = makeButton("Done", function() {
+				jc.setValue$D(+state.value);
+				field.blur();
+				J2S.Mobile.closeNumberPad();
+			}, true);
+			var cancel = makeButton("Cancel", function() {
+				field.blur();
+				J2S.Mobile.closeNumberPad();
+			});
+			cancel.style.gridColumn = "1 / -1";
+
+			panel.appendChild(display);
+			panel.appendChild(grid);
+			overlay.appendChild(panel);
+			overlay.addEventListener("click", function(ev) {
+				if (ev.target == overlay) {
+					field.blur();
+					J2S.Mobile.closeNumberPad();
+				}
+			});
+			document.body.appendChild(overlay);
+			refresh();
+		},
+
+		addNumberPad : function(jc) {
+			jc.getUI$().domNode.addEventListener(self.PointerEvent ? "pointerdown" : "touchstart",
+				function(ev) {
+					var oe = ev.originalEvent || ev;
+					if (oe.isPrimary === false)
+						return;
+					ev.preventDefault();
+					ev.stopPropagation();
+					J2S.Mobile.showNumberPad(jc);
+				}, true);
+		}
+	}
 
 })(self.J2S, self.jQuery, window, document);
 // j2sClazz.js 

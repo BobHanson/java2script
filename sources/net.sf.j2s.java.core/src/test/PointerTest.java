@@ -13,7 +13,7 @@ import javax.swing.JApplet;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-public class GoodByeWorld2 extends JApplet {
+public class PointerTest extends JApplet {
 	
 	private JLabel label;
 
@@ -25,7 +25,7 @@ public class GoodByeWorld2 extends JApplet {
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-//				System.out.println(Thread.currentThread().getName());
+				System.out.println(e.getX() + " " + e.getY() + e.getLocationOnScreen());
 			}
 
 			@Override

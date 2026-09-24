@@ -637,6 +637,7 @@ Swing.setMenu = function(menu) {
 	menu._applet._menus || (menu._applet._menus = {});
 	menu._applet._menus[menu._j2sname] = menu;
 	menu._tainted = true;
+    Swing.menuInitialized++;    
 }
 
 Swing.updateMenu = function(menu, andShow) {

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.JSComponent;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -1364,6 +1365,32 @@ public class JSUtil implements JSUtilI {
        * }
        */
 	  return null;
+	}
+
+	@Override
+	public int getComponentDistanceToRightEdge(JComponent c, JComponent ref) {
+			return c.秘getUI().getComponentDistanceToRightEdge(ref);
+	}
+
+	@Override
+	public Rectangle getMaximumViewport(int marginLeft, int marginTop) {
+		Rectangle r = new Rectangle();
+		/**
+		 * @j2sNative
+		 * var viewport = window.visualViewport;
+		 * var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+		 * var viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+		 * if (viewport) {
+		 *   viewportWidth = Math.min(viewportWidth, viewport.width);
+		 *   viewportHeight = Math.min(viewportHeight, viewport.height);
+		 * }
+		 * r.x = Math.floor(viewport ? viewport.pageLeft : window.pageXOffset) + marginLeft;
+		 * r.y = Math.floor(viewport ? viewport.pageTop : window.pageYOffset) + marginTop;
+		 * r.width = Math.max(1, Math.floor(viewportWidth) - marginLeft * 2);
+		 * r.height = Math.max(1, Math.floor(viewportHeight) - marginTop * 2);
+		 */
+		return r;
+		
 	}
 }
 

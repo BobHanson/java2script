@@ -3890,4 +3890,38 @@ public class JSComponentUI extends ComponentUI
 	}
 
 
+	public int getComponentDistanceToRightEdge(JComponent ref) {
+		// by AI, interpreted by BH
+		// untested
+		float current = parseFloat(DOMNode.getStyle(domNode, "left"));
+		if (Float.isNaN(current))
+			return Integer.MIN_VALUE;
+		DOMNode refNode = ref.秘getUI().domNode;		
+		Rectangle rect = domNode.getBoundingClientRect(); 
+		Rectangle anchor = refNode.getBoundingClientRect(); 
+		int[] lr = new int[2];
+		/**
+		 * @j2sNative
+		 * 
+		 * var viewport = window.visualViewport; 
+		 * lr[0] = (viewport ? viewport.offsetLeft : 0) + 4; 
+		 * lr[1] = (viewport ? viewport.offsetLeft + viewport.width : document.documentElement.clientWidth) - 4; 
+		 */
+		
+		 int target = Math.max(lr[0], Math.min(anchor.x + anchor.width, lr[1]) - rect.width); 
+		 return (int) (target - rect.x);
+	}
+
+
+	/**
+	 * will allow "173px"
+	 * 
+	 * @param s
+	 * @return
+	 */
+	private float parseFloat(String s) {
+		return (/** @j2sNative parseFloat(s) ||*/ Float.NaN); 
+	}
+
+
 }

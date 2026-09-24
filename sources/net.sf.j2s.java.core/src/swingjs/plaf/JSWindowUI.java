@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 import java.awt.peer.WindowPeer;
 
 import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 import javax.swing.JWindow;
 
 import swingjs.JSAppletViewer;
@@ -114,8 +115,43 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 		}
 		z = J2S.setWindowZIndex(domNode, Integer.MAX_VALUE);
 		setZ(z);
+		updateAllMenusZ(z + 2);
 		if (modalNode != null)
 			DOMNode.setZ(modalNode, z - 1);
+	}
+
+	private void updateAllMenusZ(int z) {
+		// Cached popup menus live outside their owner's DOM tree. Window
+		// activation must restack them too, including currently hidden menus.
+		// Otherwise a reused menu can appear behind its owner after a dialog.
+		
+		// Cached popup menus live outside their owner's DOM tree. Window
+		// activation must restack them too, including currently hidden menus.
+		// Otherwise a reused menu can appear behind its owner after a dialog.
+		// o is a JavaScript Object {}
+		Object o = applet.getMenus();
+		if (o != null) {
+			JPopupMenu[] menus = new JPopupMenu[0]; // will extend this 
+			/**
+			 * @j2sNative
+			 * 
+			 * for (var id in menus){ menus.push(menus[id])); }
+			 */
+			for (int i = menus.length; --i >= 0;) {
+				JPopupMenu menu = menus[i];
+				// AI:
+				//		var invoker = menu.getInvoker$ && menu.getInvoker$();
+				//		if (menu.ui && invoker && invoker.ui)
+				//			menu.ui.setZ$I(invoker.ui.getInheritedZ$() + 2);
+
+				JSComponentUI mui = menu.秘getUI();
+				JSComponentUI iui = ((JComponent) menu.getInvoker()).秘getUI();
+				mui.setZ(iui.getInheritedZ() + 2);
+			}
+		}
+	}
+	
+	void updateMenuZ(Object m) {
 	}
 
 	@Override

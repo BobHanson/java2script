@@ -1,9 +1,12 @@
 // j2sApplet.js 
 
 // BH = Bob Hanson hansonr@stolaf.edu 
+// AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
-// WC 2026.09.10 ChatGPT-plus AI-generated touch improvements
+// WC 2026.09.23 removing tracker-mobile references
+// AI 2026.09.22 ChatGPT-plus AI-generated touch improvements
+// AI 2026.09.10 ChatGPT-plus AI-generated touch improvements
 // BH 2026.08.23 adds css touch-action none for resizer
 // BH 2025.10.28 moves template.html getClassList to here as J2S.getClassList(optionalName)
 // BH 2025.10.15 allowing ../../.... at the start of Info.j2sPath
@@ -1783,6 +1786,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 	var isCompatibilityMouseEvent = function(ev) {
 		var oe = ev.originalEvent || ev;
 		return !!(oe.sourceCapabilities && oe.sourceCapabilities.firesTouchEvents) ||
+			(!!J2S._lastPointerDown &&
+				Date.now() - J2S._lastPointerDown.time < 500) ||
+			(!!J2S._lastPointerUp &&
+				Date.now() - J2S._lastPointerUp < 500) ||
 			(!!J2S._lastTouchPointerDown &&
 				Date.now() - J2S._lastTouchPointerDown.time < 800) ||
 			(!!J2S._lastTouchPointerUp &&
@@ -2107,6 +2114,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				y: touchDownPoint.y
 			};
 		}
+		if (ev.type == "pointerdown" && !isTouchPointerEvent(ev)) {
+			J2S._lastPointerDown = {
+				time: Date.now()
+			};
+		}
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"DOWN", ev);
 
@@ -2114,12 +2126,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// otherwise, if J2S._firstTouch is undefined (!!x != x), set J2S._firstTouch
 		// and ignore future touch events (through the first touchend):
 		
-		if (ev.type == "mousedown") {// BHTEst
-			if (isCompatibilityMouseEvent(ev))
+		if (ev.type == "mousedown" || (ev.type == "pointerdown" && !isTouchPointerEvent(ev))) {// BHTEst
+			if (ev.type == "mousedown" && isCompatibilityMouseEvent(ev))
 				return true;
 		    J2S._haveMouse = true;
 		} else { 
-		    if (J2S._haveMouse) return;
+		    // Mouse detection must not disable later touch input.
 		    if (!!J2S._firstTouch != J2S._firstTouch) {
 // q - why did we do this?
 //			J2S._firstTouch = true;
@@ -2170,7 +2182,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			return true;
 
 		if (ev.type == "touchmove" && 
-				(J2S._firstTouch || J2S._haveMouse)) {
+				J2S._firstTouch) {
 			return;
 		}
 		
@@ -2252,6 +2264,8 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		}
 		if (isTouchPointerEvent(ev))
 			J2S._lastTouchPointerUp = Date.now();
+		else if (ev.type == "pointerup")
+			J2S._lastPointerUp = Date.now();
 		who.isDown = false;
 		if (J2S._traceMouse)
 			J2S.traceMouse(who,"UP", ev);
@@ -2260,7 +2274,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// and set J2S.firstTouch false:
 			
 		if (ev.type == "touchend") {
-		    if (J2S._haveMouse) return;
+		    // Mouse detection must not disable later touch input.
 		    if (J2S._firstTouch) {
 		    	J2S._firstTouch = false;
 		        return;
@@ -2445,18 +2459,17 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		// swingjs.api.J2SInterface
 
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mousemove pointermove' : 'pointermove mousemove touchmove'), 
+		J2S.$bind(who, 'pointermove mousemove touchmove', 
 				function(ev) { return mouseMove(who, ev) });
 
 		J2S.$bind(who, 'click', function(ev) { return mouseClick(who, ev) });
 		
 		J2S.$bind(who, 'DOMMouseScroll mousewheel', function(ev) { return mouseWheel(who, ev) });
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mousedown pointerdown' : 'pointerdown mousedown touchstart'), 
+		J2S.$bind(who, 'pointerdown mousedown touchstart', 
 				function(ev) { return mouseDown(who, ev) });
 
-		J2S.$bind(who, (J2S._haveMouse ? 'mouseup pointerup pointercancel' :
-		'pointerup pointercancel mouseup touchend touchcancel'),
+		J2S.$bind(who, 'pointerup pointercancel mouseup touchend touchcancel',
 				function(ev) { return mouseUp(who, ev) });
 
 		J2S.$bind(who, 'pointerenter mouseenter', function(ev) { return mouseEnter(who, ev) });
@@ -2633,10 +2646,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var oe = ev.originalEvent;
 		// drag-drop jQuery event is missing pageX
 		// A touchend has no targetTouches. Use changedTouches so its release
-		// coordinate is the same physical point as touchstart. Falling back to
-		// J2S._mousePageX/Y here is unsafe after mobile toolbar remapping because
-		// those values already contain the translated Swing coordinates and would
-		// be translated a second time.
+		// coordinate is the same physical point as touchstart.
 		if (oe && oe.targetTouches && oe.targetTouches.length) {
 			oe = oe.targetTouches[0];
 		} else if (oe && oe.changedTouches && oe.changedTouches.length) {
@@ -2649,77 +2659,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		x = J2S._mousePageX = Math.round(ev.pageX);
 		y = J2S._mousePageY = Math.round(ev.pageY);
 
-		// TrackerStudentMobile enlarges and reflows the Swing toolbar in CSS so
-		// its controls are usable by touch. SwingJS normally hit-tests the Java
-		// component tree with raw page coordinates, which still correspond to
-		// the toolbar's original inline bounds. Map a pointer inside an enhanced
-		// control back into those logical bounds before dispatching the event.
-		// This preserves the native action, popup menu, and dialog for every
-		// toolbar button without replacing any Tracker functionality.
-		var eventTarget = ev.target || (oe && oe.target);
-		var control = eventTarget && eventTarget.closest &&
-			eventTarget.closest(".tracker-mobile-toolbar > .tracker-toolbar-control, .tracker-mobile-remapped-control");
-		if (control && !control.classList.contains("tracker-toolbar-separator") &&
-			!(oe && oe.trackerLogicalCoordinates)) {
-			var toolbar = control.parentElement;
-			var toolbarShell = toolbar.parentElement;
-			var visualBounds = control.getBoundingClientRect();
-			var toolbarBounds = toolbar.getBoundingClientRect();
-			var remappedWindow = control.classList.contains("tracker-mobile-remapped-control") &&
-				control.closest(".tracker-mobile-responsive-window");
-			var savedBounds = (control.getAttribute("data-tracker-logical-bounds") || "").split(",");
-			var logicalLeft = parseFloat(savedBounds[0] || control.style.left);
-			var logicalTop = parseFloat(savedBounds[1] || control.style.top);
-			var logicalWidth = parseFloat(savedBounds[2] || control.style.width);
-			var logicalHeight = parseFloat(savedBounds[3] || control.style.height);
-			if (visualBounds.width > 0 && visualBounds.height > 0 &&
-				isFinite(logicalLeft) && isFinite(logicalTop) &&
-				isFinite(logicalWidth) && isFinite(logicalHeight)) {
-				var pageScrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
-				var pageScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
-				var toolbarScrollX = toolbarShell.scrollLeft || 0;
-				var toolbarScrollY = toolbarShell.scrollTop || 0;
-				// Swing may place its compact overflow button partially beyond the
-				// frame edge. Keep the translated point inside the portion that the
-				// Java component tree can actually hit-test.
-				var logicalHitWidth = Math.min(logicalWidth,
-					Math.max(1, toolbarShell.clientWidth - logicalLeft));
-				var logicalHitHeight = Math.min(logicalHeight,
-					Math.max(1, toolbarShell.clientHeight - logicalTop));
-				var relativeX = Math.max(0, Math.min(1,
-					(x - visualBounds.left - pageScrollX) / visualBounds.width));
-				var relativeY = Math.max(0, Math.min(1,
-					(y - visualBounds.top - pageScrollY) / visualBounds.height));
-				var logicalBaseLeft = toolbarBounds.left + pageScrollX + toolbarScrollX;
-				var logicalBaseTop = toolbarBounds.top + pageScrollY + toolbarScrollY;
-				if (remappedWindow && remappedWindow.parentElement) {
-					/* A responsive secondary window is position:fixed while Swing's
-					 * component model remains at the original centered desktop host.
-					 * Rebuild the original nested inline offset so Java receives the
-					 * same coordinate it would have received before the mobile reflow. */
-					var hostBounds = remappedWindow.parentElement.getBoundingClientRect();
-					var ancestor = control.parentElement;
-					var ancestorLeft = 0;
-					var ancestorTop = 0;
-					while (ancestor && ancestor !== remappedWindow) {
-						var ancestorPosition = window.getComputedStyle(ancestor).position;
-						if (ancestorPosition !== "static") {
-							var ancestorInlineLeft = parseFloat(ancestor.style.left);
-							var ancestorInlineTop = parseFloat(ancestor.style.top);
-							if (isFinite(ancestorInlineLeft)) ancestorLeft += ancestorInlineLeft;
-							if (isFinite(ancestorInlineTop)) ancestorTop += ancestorInlineTop;
-						}
-						ancestor = ancestor.parentElement;
-					}
-					logicalBaseLeft = hostBounds.left + pageScrollX + ancestorLeft;
-					logicalBaseTop = hostBounds.top + pageScrollY + ancestorTop;
-				}
-				x = Math.round(logicalBaseLeft + logicalLeft + relativeX * logicalHitWidth);
-				y = Math.round(logicalBaseTop + logicalTop + relativeY * logicalHitHeight);
-				J2S._mousePageX = x;
-				J2S._mousePageY = y;
-			}
-		}
 		return [ Math.round(x - offsets.left), Math.round(y - offsets.top), mods];
 	}
 	
@@ -3184,6 +3123,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		proto._getHtml5Canvas = function() {
 			return this._canvas
 		};
+		
+		proto._getMenus = function() {
+			return this._menus || null;
+		}
 				
 		proto._setAppClass = function(app) { this.getApp = function() {this._setThread();return app}};
 		
@@ -3992,17 +3935,11 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	  J2S.Mobile = {
 
-		addNumberPad : function(jc) {
-			jc.getUI$().domNode.addEventListener(self.PointerEvent ? "pointerdown" : "touchstart",
-				function(ev) {
-					var oe = ev.originalEvent || ev;
-					if (oe.isPrimary === false)
-						return;
-					ev.preventDefault();
-					ev.stopPropagation();
-					J2S.Mobile.showNumberPad(jc);
-				}, true);
+		closeNumberPad : function() {
+			var pad = document.getElementById("j2s_mobile_number_pad");
+			pad && pad.parentNode.removeChild(pad);
 		},
+		
 		showNumberPad : function(jc) {
 			J2S.Mobile.closeNumberPad();
 
@@ -4146,9 +4083,17 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			document.body.appendChild(overlay);
 			refresh();
 		},
-		closeNumberPad : function() {
-			var pad = document.getElementById("j2s_mobile_number_pad");
-			pad && pad.parentNode.removeChild(pad);
+
+		addNumberPad : function(jc) {
+			jc.getUI$().domNode.addEventListener(self.PointerEvent ? "pointerdown" : "touchstart",
+				function(ev) {
+					var oe = ev.originalEvent || ev;
+					if (oe.isPrimary === false)
+						return;
+					ev.preventDefault();
+					ev.stopPropagation();
+					J2S.Mobile.showNumberPad(jc);
+				}, true);
 		}
 	}
 
