@@ -135,7 +135,7 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 			/**
 			 * @j2sNative
 			 * 
-			 * for (var id in menus){ menus.push(menus[id])); }
+			 * for (var id in menus){ menus.push(menus[id]); }
 			 */
 			for (int i = menus.length; --i >= 0;) {
 				JPopupMenu menu = menus[i];

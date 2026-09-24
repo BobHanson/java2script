@@ -13809,6 +13809,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		proto._getHtml5Canvas = function() {
 			return this._canvas
 		};
+		
+		proto._getMenus = function() {
+			return this._menus || null;
+		}
 				
 		proto._setAppClass = function(app) { this.getApp = function() {this._setThread();return app}};
 		
@@ -14524,16 +14528,6 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			z = modalZ - 500;
 		}
 		node.ui.outerNode && (node.ui.outerNode.style.zIndex = z);
-		// Cached popup menus live outside their owner's DOM tree. Window
-		// activation must restack them too, including currently hidden menus.
-		// Otherwise a reused menu can appear behind its owner after a dialog.
-		var menus = node.ui.applet && node.ui.applet._menus;
-		for (var id in menus) {
-			var menu = menus[id];
-			var invoker = menu.getInvoker$ && menu.getInvoker$();
-			if (menu.ui && invoker && invoker.ui)
-				menu.ui.setZ$I(invoker.ui.getInheritedZ$() + 2);
-		}
 		return z;
 	}
 
