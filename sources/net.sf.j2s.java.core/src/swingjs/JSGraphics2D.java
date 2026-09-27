@@ -396,8 +396,9 @@ public class JSGraphics2D implements
 
 	public void doStroke(boolean isBegin) {
 		inPath = isBegin;
-		if (isBegin && !thinLine) {
-			ctx.translate(0.5, 0.5);
+		if (isBegin) {
+			if (!thinLine)
+				ctx.translate(0.5, 0.5);
 			ctx.beginPath();
 		} else {
 			ctx.stroke();
