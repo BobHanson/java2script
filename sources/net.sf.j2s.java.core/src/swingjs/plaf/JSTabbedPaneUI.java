@@ -2612,7 +2612,7 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
             isRunsDirty = false;
         }
 
-        private void layoutTabComponents() {
+        protected void layoutTabComponents() {
             if (tabContainer == null) {
                 return;
             }
