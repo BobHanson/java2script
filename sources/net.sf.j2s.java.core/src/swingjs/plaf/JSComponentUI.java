@@ -1393,7 +1393,9 @@ public class JSComponentUI extends ComponentUI
 		
 		switch (prop) {
 		case JLayeredPane.LAYER_PROPERTY:
-			setZ(getInheritedZ() + ((Integer)e.getNewValue()).intValue());
+			int layer = ((Integer)e.getNewValue()).intValue();
+			if (layer != CONTENT_PANE_Z)
+				setZ(getInheritedZ() + layer);
 			setTainted();
 			return;
 		case "border":

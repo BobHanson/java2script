@@ -1693,7 +1693,7 @@ public abstract class CubicCurve2D implements Shape, Cloneable {
     @Override
 		public PathIterator getPathIterator(AffineTransform at) {
     	// SwingJS  reflection
-    	return ((CubicIterator) Interface.getInstance("java.awt.geom.CubicInterator", false)).set(this,at); 
+    	return ((CubicIterator) Interface.getInstance("java.awt.geom.CubicIterator", false)).set(this,at); 
     }
 
     /**
