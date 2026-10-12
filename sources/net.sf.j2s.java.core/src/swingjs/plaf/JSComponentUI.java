@@ -829,7 +829,21 @@ public class JSComponentUI extends ComponentUI
 			JSPopupMenuUI.closeAllMenus();
 		hideTooltip();
 	}
-	
+
+	private static Runnable runCloseAllMenusNow = ()->{
+		JSPopupMenuUI.closeAllMenusNOW();
+	};
+	public static void forceCloseAllMenus(int ms) {
+		/** @j2sNative 
+		 * 
+		 * setTimeout(C$.runCloseAllMenusNow.run$,ms);
+		 */
+		{
+			runCloseAllMenusNow.run();
+		}
+	}
+
+
 	@SuppressWarnings("unused")
 	protected static void hideTooltip() {
 		if (/** @j2sNative javax.swing.ToolTipManager ||*/false)
@@ -3924,6 +3938,7 @@ public class JSComponentUI extends ComponentUI
 	private float parseFloat(String s) {
 		return (/** @j2sNative parseFloat(s) ||*/ Float.NaN); 
 	}
+
 
 
 }

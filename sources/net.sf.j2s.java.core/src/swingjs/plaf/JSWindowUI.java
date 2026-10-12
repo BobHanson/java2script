@@ -112,7 +112,7 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 		if (jc.秘isDesktop()) {
 			jc.requestFocus();
 			return;
-		}
+		}		
 		z = J2S.setWindowZIndex(domNode, Integer.MAX_VALUE);
 		setZ(z);
 		updateAllMenusZ(z + 2);
@@ -129,14 +129,16 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 		// activation must restack them too, including currently hidden menus.
 		// Otherwise a reused menu can appear behind its owner after a dialog.
 		// o is a JavaScript Object {}
-		Object o = applet.getMenus();
+		
+		Object o = applet._getMenus();
 		if (o != null) {
 			JPopupMenu[] menus = new JPopupMenu[0]; // will extend this 
 			/**
 			 * @j2sNative
 			 * 
-			 * for (var id in menus){ menus.push(menus[id]); }
+			 * for (var id in o){ menus.push(o[id]); }
 			 */
+			JSComponentUI mui = null;
 			for (int i = menus.length; --i >= 0;) {
 				JPopupMenu menu = menus[i];
 				// AI:
@@ -144,10 +146,14 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 				//		if (menu.ui && invoker && invoker.ui)
 				//			menu.ui.setZ$I(invoker.ui.getInheritedZ$() + 2);
 
-				JSComponentUI mui = menu.秘getUI();
+				mui = menu.秘getUI();
 				JSComponentUI iui = ((JComponent) menu.getInvoker()).秘getUI();
-				mui.setZ(iui.getInheritedZ() + 2);
+				mui.setZ(iui.getInheritedZ() + JSPopupMenuUI.ZOFFSET);
 			}
+			if (mui != null) {
+				forceCloseAllMenus(100);
+			}
+	
 		}
 	}
 	
@@ -306,7 +312,7 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 
 	@Override
 	public void windowClosed(WindowEvent e) {
-		hideMenusAndToolTip();
+		forceCloseAllMenus(10);
 	}
 
 

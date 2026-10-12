@@ -67,6 +67,6 @@ public interface HTML5Applet {
 
 	void _setAppClass(Object app);
 
-	Object getMenus();
+	Object _getMenus();
 
 }

@@ -74,7 +74,7 @@ public class Resizer {
 		JSUtil.jQuery.$(resizer).addClass("swingjs-resizer");
 		rubberBand = DOMNode.createElement("div", id + "_rb");
 		DOMNode.setStyles(rubberBand, "border", "1px dashed #FF00FF", "z-index", "100000", "position", "absolute",
-				"left", "0px", "top", "0px", "display", "none");
+				"left", "0px", "top", "0px", "display", "none", "pointer-events", "none");
 		rootNode.appendChild(resizer);
 		rootNode.appendChild(rubberBand);
 		JSFunction fHandleResizer = null, fHandleDOMResize = null;

@@ -64,6 +64,11 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 
 	public static final String UI_DISABLED = "ui-j2smenu-disabled ui-state-disabled";
 
+	/**
+	 * offset to make sure this is in front of any associated windows
+	 */
+	public static final int ZOFFSET = 20000;
+
 
 	@Override
 	public void propertyChange(PropertyChangeEvent e) {
@@ -239,7 +244,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			//have to cheat here; these values are private to JMenu.
 			int x = /** @j2sNative this.menu.desiredLocationX || */0;
 			int y = /** @j2sNative this.menu.desiredLocationY || */0;
-			setZ(getInheritedZ((JComponent) menu.getInvoker()) + 2);
+			setZ(getInheritedZ((JComponent) menu.getInvoker()) + ZOFFSET);
 			j2sSwingMenu.showMenu(menu, x, y);
 			showTime = System.currentTimeMillis();
 //		} else {
@@ -1299,6 +1304,10 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			lastInvoker = null;
 	        MenuSelectionManager.defaultManager().setSelectedPath(null);
 		}
+		closeAllMenusNOW();
+	}
+
+	static void closeAllMenusNOW() {
 		JSUtil.jQuery.$(".ui-j2smenu").hide().attr("aria-hidden","true").attr("aria-expanded","false");
 		JSUtil.jQuery.$(".ui-j2smenu-node").removeClass("ui-state-active").removeClass("ui-state-focus");
 	}
