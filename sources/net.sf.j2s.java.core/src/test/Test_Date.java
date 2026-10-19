@@ -1,6 +1,7 @@
 package test;
 
 import java.util.Date;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 
 strictfp class Test_Date extends Test_{
@@ -60,6 +61,26 @@ strictfp class Test_Date extends Test_{
 		System.out.println(s);
 		s = new SimpleDateFormat("MMddyyhhmm").format(d).toString();
 		System.out.println(s);
+
+		try {
+			SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			Date timestamp = parser.parse("1970-01-01T01:00:00", new ParsePosition(0));
+			System.out.println("Success." + timestamp);
+			timestamp = parser.parse("TESTING 1970-01-01T01:00:00", new ParsePosition(8));
+			System.out.println("Success." + timestamp);
+			parser = new SimpleDateFormat("M/d/yyyy");
+			timestamp = parser.parse("10/3/2026");
+			System.out.println("Success." + timestamp);
+			parser = new SimpleDateFormat("d/M/yyyy");
+			timestamp = parser.parse("3/10/2026");
+			System.out.println("Success." + timestamp);
+			parser = new SimpleDateFormat("yyyy.MM.dd");
+			timestamp = parser.parse("2026.10.3");
+			System.out.println("Success." + timestamp);
+		} catch (Throwable et) {
+			System.err.print("Failed! ");
+			et.printStackTrace();
+		}
 
 	}
 

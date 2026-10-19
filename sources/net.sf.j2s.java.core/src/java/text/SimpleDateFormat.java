@@ -595,8 +595,6 @@ public class SimpleDateFormat extends DateFormat {
 
 	/* Initialize compiledPattern and numberFormat fields */
 	private void initializeLocale() {
-		if (this.isSimpleMMDDYY || this.isISO8601)
-			return;
 		if (locale == null)
 			locale = Locale.getDefault();
 		// Verify and compile the given pattern.
@@ -612,7 +610,6 @@ public class SimpleDateFormat extends DateFormat {
 			cachedNumberFormatData.put(locale, numberFormat);
 		}
 		numberFormat = (NumberFormat) numberFormat.clone();
-
 	}
 
 	private static NumberFormat getCachedNumberFormatData(Locale key) {
@@ -626,23 +623,24 @@ public class SimpleDateFormat extends DateFormat {
 	@Override
 	public Calendar getCalendar() {
 		if (super.getCalendar() == null) {
-			initializeCalendar();
+			initializeCalendar(false);
 		}
 		return calendar;
 	}
 
-	private void initializeCalendar() {
-		if (calendar == null) {
+	private void initializeCalendar(boolean isParse) {
+		if (calendar != null)
+			return;
+		if (isParse || !isSimpleMMDDYY && !isISO8601)
 			initializeLocale();
-			if (formatData == null)
-				formatData = DateFormatSymbols.getInstance(locale);
-			// The format object must be constructed using the symbols for this zone.
-			// However, the calendar should use the current default TimeZone.
-			// If this is not contained in the locale zone strings, then the zone
-			// will be formatted using generic GMT+/-H:MM nomenclature.
-			calendar = Calendar.getInstance(TimeZone.getDefault(), locale);
-			initializeDefaultCentury();
-		}
+		if (formatData == null)
+			formatData = DateFormatSymbols.getInstance(locale);
+		// The format object must be constructed using the symbols for this zone.
+		// However, the calendar should use the current default TimeZone.
+		// If this is not contained in the locale zone strings, then the zone
+		// will be formatted using generic GMT+/-H:MM nomenclature.
+		calendar = Calendar.getInstance(TimeZone.getDefault(), locale);
+		initializeDefaultCentury();
 	}
 
 	private String getKey() {
@@ -1358,34 +1356,36 @@ public class SimpleDateFormat extends DateFormat {
 	 */
 	@Override
 	public Date parse(String text, ParsePosition pos) {
+		if (isISO8601) {
+// could use this for MM/dd/yyyy, but that might get confused with dd/MM/yyyy
 //		// SwingJS brute force
-//		Date d = null;
-//		int i0 = pos.index;
-//		pos.index = Math.min(80, text.length());
-//		while (pos.index >= i0) {
-//			double x = 0;
-//			String s = text.substring(i0, pos.index);
-//
-//			/**
-//			 *
-//			 * Just check for a date using brute force
-//			 * 
-//			 * @j2sNative
-//			 * 
-//			 * 			d = new Date(s); 
-//			 * 			x = d.getMilliseconds();
-//			 */
-//
-//			if (!Double.isNaN(x))
-//				return d;
-//			pos.index--;
-//		}
-//		pos.index = i0;
-//		return null;
+			Date d = null;
+			int i0 = pos.index;
+			pos.index = Math.min(80, text.length());
+			while (pos.index >= i0) {
+				double x = 0;
+				String s = text.substring(i0, pos.index);
+
+				/**
+				 *
+				 * Just check for a date using brute force
+				 * 
+				 * @j2sNative
+				 * 
+				 * 			d = new Date(s); x = d.getMilliseconds();
+				 */
+
+				if (!Double.isNaN(x))
+					return d;
+				pos.index--;
+			}
+			pos.index = i0;
+			return null;
+		}
 		int start = pos.index;
 		int oldStart = start;
 		int textLength = text.length();
-
+		initializeCalendar(true);
 		getCalendar().clear(); // Clears all the time fields
 
 		boolean[] ambiguousYear = { false };
@@ -2075,7 +2075,7 @@ public class SimpleDateFormat extends DateFormat {
 		if (useDateFormatSymbols) {
 			return true;
 		}
-		return isGregorianCalendar() || locale == null;
+		return locale == null || isGregorianCalendar();
 	}
 
 	private boolean isGregorianCalendar() {
