@@ -294,7 +294,8 @@ public abstract class DateFormat extends Format {
      * pattern character 'z'.
      * @see java.text.Format
      */
-    public final StringBuffer format(Object obj, StringBuffer toAppendTo,
+    @Override
+	public final StringBuffer format(Object obj, StringBuffer toAppendTo,
                                      FieldPosition fieldPosition)
     {
         if (obj instanceof Date)
@@ -416,7 +417,8 @@ public abstract class DateFormat extends Format {
      *         error, returns null.
      * @exception NullPointerException if <code>pos</code> is null.
      */
-    public Object parseObject(String source, ParsePosition pos) {
+    @Override
+	public Object parseObject(String source, ParsePosition pos) {
         return parse(source, pos);
     }
 
@@ -733,7 +735,8 @@ public abstract class DateFormat extends Format {
     /**
      * Overrides hashCode
      */
-    public int hashCode() {
+    @Override
+	public int hashCode() {
         return numberFormat.hashCode();
         // just enough fields for a reasonable distribution
     }
@@ -741,7 +744,8 @@ public abstract class DateFormat extends Format {
     /**
      * Overrides equals
      */
-    public boolean equals(Object obj) {
+    @Override
+	public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         DateFormat other = (DateFormat) obj;
@@ -756,11 +760,14 @@ public abstract class DateFormat extends Format {
     /**
      * Overrides Cloneable
      */
-    public Object clone()
+    @Override
+	public Object clone()
     {
         DateFormat other = (DateFormat) super.clone();
-        other.calendar = (Calendar) calendar.clone();
-        other.numberFormat = (NumberFormat) numberFormat.clone();
+        if (calendar != null)
+        	other.calendar = (Calendar) calendar.clone();
+        if (numberFormat != null)
+        	other.numberFormat = (NumberFormat) numberFormat.clone();
         return other;
     }
 

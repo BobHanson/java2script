@@ -455,6 +455,8 @@ public class SimpleDateFormat extends DateFormat {
 	 */
 	transient boolean useDateFormatSymbols;
 
+	private String patternKey;
+
 	/**
 	 * Constructs a <code>SimpleDateFormat</code> using the default pattern and date
 	 * format symbols for the default locale. <b>Note:</b> This constructor may not
@@ -463,6 +465,43 @@ public class SimpleDateFormat extends DateFormat {
 	 */
 	public SimpleDateFormat() {
 		this(SHORT, SHORT, Locale.getDefault());
+	}
+
+	/* Package-private, called by DateFormat factory methods */
+	/**
+	 * allows pattern to be set separately or defined by default from a given locale
+	 * 
+	 * @param timeStyle
+	 * @param dateStyle
+	 * @param loc
+	 */
+	SimpleDateFormat(int timeStyle, int dateStyle, Locale loc) {
+		if (loc == null) {
+			throw new NullPointerException();
+		}
+		this.locale = loc;
+		patternKey = loc.getLanguage() + "_" + loc.getCountry() + "_" + loc.getVariant() + timeStyle + dateStyle;
+
+		// initialize calendar and related fields
+		// initializeCalendar();
+		/* try the cache first */
+//        formatData = DateFormatSymbols.getInstance(loc);
+//        if ((timeStyle >= 0) && (dateStyle >= 0)) {
+//            Object[] dateTimeArgs = {dateTimePatterns[timeStyle],
+//                                     dateTimePatterns[dateStyle + 4]};
+//            pattern = MessageFormat.format(dateTimePatterns[8], dateTimeArgs);
+//        }
+//        else if (timeStyle >= 0) {
+//            pattern = dateTimePatterns[timeStyle];
+//        }
+//        else if (dateStyle >= 0) {
+//            pattern = dateTimePatterns[dateStyle + 4];
+//        }
+//        else {
+//            throw new IllegalArgumentException("No date or time style specified");
+//        }
+//
+//        initializeLocale(loc);
 	}
 
 	/**
@@ -508,64 +547,10 @@ public class SimpleDateFormat extends DateFormat {
 		if (pattern == null || formatSymbols == null) {
 			throw new NullPointerException();
 		}
-
 		this.pattern = pattern;
 		this.formatData = (DateFormatSymbols) formatSymbols.clone();
 		this.isSimpleMMDDYY = false;
-		// initializeCalendar();
-		// initializeLocale();
 		useDateFormatSymbols = true;
-	}
-
-	/* Package-private, called by DateFormat factory methods */
-	SimpleDateFormat(int timeStyle, int dateStyle, Locale loc) {
-		if (loc == null) {
-			throw new NullPointerException();
-		}
-		isSimpleMMDDYY = false;
-		this.locale = loc;
-		// initialize calendar and related fields
-		// initializeCalendar();
-		/* try the cache first */
-		String key = getKey() + timeStyle + dateStyle;
-		pattern = getCachedLocaleData(key);
-		if (pattern == null) { /* cache miss */
-			// BH we just
-			pattern = LocaleProviderAdapter.getResourceBundleBased().getLocaleResources(loc).getDateTimePattern(SHORT,
-					SHORT, getCalendar());
-
-			// BH SwingJS this must be an older style
-//        	
-//            ResourceBundle r = LocaleData.getDateFormatData(loc);
-//            if (!isGregorianCalendar()) {
-//                try {
-//                    dateTimePatterns = r.getStringArray(getCalendarName() + ".DateTimePatterns");
-//                } catch (MissingResourceException e) {
-//                }
-//            }
-//            if (dateTimePatterns == null) {
-//                dateTimePatterns = r.getStringArray("DateTimePatterns");
-//            }
-//            /* update cache */
-			cachedLocaleData.put(key, pattern);
-		}
-//        formatData = DateFormatSymbols.getInstance(loc);
-//        if ((timeStyle >= 0) && (dateStyle >= 0)) {
-//            Object[] dateTimeArgs = {dateTimePatterns[timeStyle],
-//                                     dateTimePatterns[dateStyle + 4]};
-//            pattern = MessageFormat.format(dateTimePatterns[8], dateTimeArgs);
-//        }
-//        else if (timeStyle >= 0) {
-//            pattern = dateTimePatterns[timeStyle];
-//        }
-//        else if (dateStyle >= 0) {
-//            pattern = dateTimePatterns[dateStyle + 4];
-//        }
-//        else {
-//            throw new IllegalArgumentException("No date or time style specified");
-//        }
-//
-//        initializeLocale(loc);
 	}
 
 	private static String getCachedLocaleData(String key) {
@@ -582,34 +567,60 @@ public class SimpleDateFormat extends DateFormat {
 		}
 		this.pattern = pattern;
 		this.locale = locale;
-		this.isSimpleMMDDYY = isSimple(pattern, locale);
-		this.isISO8601 = pattern.startsWith("yyyy-MM-dd'T'HH:mm:ss");
+		initializePattern();
 		// lazy calendar initialization for SwingJS
 		// avoids loading 49 classes!
 //      this.formatData = DateFormatSymbols.getInstance(locale);
 		// initializeCalendar();
 		// initializeLocale();
-
-		// TODO Auto-generated constructor stub
 	}
 
 	/* Initialize compiledPattern and numberFormat fields */
-	private void initializeLocale() {
-		if (locale == null)
-			locale = Locale.getDefault();
-		// Verify and compile the given pattern.
-		compiledPattern = compile(pattern);
-
-		/* try the cache first */
-		numberFormat = getCachedNumberFormatData(locale);
-		if (numberFormat == null) { /* cache miss */
-			numberFormat = NumberFormat.getIntegerInstance(locale);
-			numberFormat.setGroupingUsed(false);
-
-			/* update cache */
-			cachedNumberFormatData.put(locale, numberFormat);
+	private void initializePattern() {
+		if (pattern == null) {
+			pattern = getCachedLocaleData(patternKey);
+			if (pattern == null) {
+				// locale must not be null here
+				/* cache miss */
+				// BH we just
+				pattern = LocaleProviderAdapter.getResourceBundleBased().getLocaleResources(locale)
+						.getDateTimePattern(SHORT, SHORT, getCalendar());
+				// BH SwingJS this must be an older style
+//	        	
+//	            ResourceBundle r = LocaleData.getDateFormatData(loc);
+//	            if (!isGregorianCalendar()) {
+//	                try {
+//	                    dateTimePatterns = r.getStringArray(getCalendarName() + ".DateTimePatterns");
+//	                } catch (MissingResourceException e) {
+//	                }
+//	            }
+//	            if (dateTimePatterns == null) {
+//	                dateTimePatterns = r.getStringArray("DateTimePatterns");
+//	            }
+//	            /* update cache */
+				cachedLocaleData.put(patternKey, pattern);
+			}
 		}
-		numberFormat = (NumberFormat) numberFormat.clone();
+		isSimpleMMDDYY = isSimple(pattern);
+		isISO8601 = pattern.startsWith("yyyy-MM-dd'T'HH:mm:ss");
+	}
+	
+	private void initializeNumberFormat() {
+		if (compiledPattern == null) {
+			// Verify and compile the given pattern.
+			compiledPattern = compile(pattern);
+		}
+
+			/* try the cache first */
+			numberFormat = getCachedNumberFormatData(locale);
+			if (numberFormat == null) { /* cache miss */
+				numberFormat = NumberFormat.getIntegerInstance(locale);
+				numberFormat.setGroupingUsed(false);
+
+				/* update cache */
+				cachedNumberFormatData.put(locale, numberFormat);
+			}
+			numberFormat = (NumberFormat) numberFormat.clone();
 	}
 
 	private static NumberFormat getCachedNumberFormatData(Locale key) {
@@ -623,16 +634,19 @@ public class SimpleDateFormat extends DateFormat {
 	@Override
 	public Calendar getCalendar() {
 		if (super.getCalendar() == null) {
-			initializeCalendar(false);
+			initializeCalendar();
 		}
 		return calendar;
 	}
 
-	private void initializeCalendar(boolean isParse) {
+	private void initializeLocale(boolean isParse) {
+		if (locale == null && (isParse || !isSimpleMMDDYY && !isISO8601))
+			locale = Locale.getDefault();
+	}
+	
+	private void initializeCalendar() {
 		if (calendar != null)
 			return;
-		if (isParse || !isSimpleMMDDYY && !isISO8601)
-			initializeLocale();
 		if (formatData == null)
 			formatData = DateFormatSymbols.getInstance(locale);
 		// The format object must be constructed using the symbols for this zone.
@@ -641,13 +655,6 @@ public class SimpleDateFormat extends DateFormat {
 		// will be formatted using generic GMT+/-H:MM nomenclature.
 		calendar = Calendar.getInstance(TimeZone.getDefault(), locale);
 		initializeDefaultCentury();
-	}
-
-	private String getKey() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(getCalendarName()).append('.');
-		sb.append(locale.getLanguage()).append('_').append(locale.getCountry()).append('_').append(locale.getVariant());
-		return sb.toString();
 	}
 
 	/**
@@ -907,7 +914,7 @@ public class SimpleDateFormat extends DateFormat {
 		return super.format(date);
 	}
 
-	private boolean isSimple(String pattern, Locale locale) {
+	private boolean isSimple(String pattern) {//, Locale locale) {
 		if ((/** @j2sNative false && */
 		true))
 			return false;
@@ -1006,7 +1013,7 @@ public class SimpleDateFormat extends DateFormat {
 	private StringBuffer format(Date date, StringBuffer toAppendTo, FieldDelegate delegate) {
 		// Convert input date to time field list
 		getCalendar().setTime(date);
-
+		initialize(false);
 		boolean useDateFormatSymbols = useDateFormatSymbols();
 
 		for (int i = 0; i < compiledPattern.length;) {
@@ -1033,6 +1040,13 @@ public class SimpleDateFormat extends DateFormat {
 			}
 		}
 		return toAppendTo;
+	}
+
+	private void checkPattern() {
+		if (pattern == null) {
+	        applyPatternImpl(LocaleProviderAdapter.getResourceBundleBased().getLocaleResources(locale)
+                    .getDateTimePattern(SHORT, SHORT, getCalendar()));
+		}
 	}
 
 	/**
@@ -1385,7 +1399,7 @@ public class SimpleDateFormat extends DateFormat {
 		int start = pos.index;
 		int oldStart = start;
 		int textLength = text.length();
-		initializeCalendar(true);
+		initialize(true);
 		getCalendar().clear(); // Clears all the time fields
 
 		boolean[] ambiguousYear = { false };
@@ -1497,6 +1511,17 @@ public class SimpleDateFormat extends DateFormat {
 		}
 
 		return parsedDate;
+	}
+
+	private void initialize(boolean isParse) {
+		if (pattern == null)
+			initializeLocale(true);
+		initializePattern();
+		initializeLocale(isParse);
+		initializeNumberFormat();
+		if (isParse) {
+			initializeCalendar();			
+		}
 	}
 
 	/**
@@ -2139,6 +2164,10 @@ public class SimpleDateFormat extends DateFormat {
 	 * @exception IllegalArgumentException if the given pattern is invalid
 	 */
 	public void applyPattern(String pattern) {
+		applyPatternImpl(pattern);
+	}
+
+	private void applyPatternImpl(String pattern) {
 		compiledPattern = compile(pattern);
 		this.pattern = pattern;
 	}
@@ -2152,9 +2181,12 @@ public class SimpleDateFormat extends DateFormat {
 	 * @exception IllegalArgumentException if the given pattern is invalid
 	 */
 	public void applyLocalizedPattern(String pattern) {
+		isSimpleMMDDYY = isISO8601 = false;
+		pattern = null;
+		initialize(true);
 		String p = translatePattern(pattern, formatData.getLocalPatternChars(), DateFormatSymbols.patternChars);
-		compiledPattern = compile(p);
 		this.pattern = p;
+		initialize(true);
 	}
 
 	/**
@@ -2164,6 +2196,9 @@ public class SimpleDateFormat extends DateFormat {
 	 * @see #setDateFormatSymbols
 	 */
 	public DateFormatSymbols getDateFormatSymbols() {
+		if (formatData == null) {
+			initialize(true);
+		}
 		return (DateFormatSymbols) formatData.clone();
 	}
 
@@ -2187,6 +2222,7 @@ public class SimpleDateFormat extends DateFormat {
 	 */
 	@Override
 	public Object clone() {
+		initialize(true);
 		SimpleDateFormat other = (SimpleDateFormat) super.clone();
 		other.formatData = (DateFormatSymbols) formatData.clone();
 		return other;
@@ -2212,10 +2248,17 @@ public class SimpleDateFormat extends DateFormat {
 	 */
 	@Override
 	public boolean equals(Object obj) {
+		if (!(obj instanceof SimpleDateFormat))
+			return false;
+		SimpleDateFormat that = (SimpleDateFormat) obj;
+		if (pattern == null || that.pattern == null)
+			return false;
+		if (!pattern.equals(that.pattern) || 
+				useDateFormatSymbols && !formatData.equals(that.formatData))
+			return false;
 		if (!super.equals(obj))
 			return false; // super does class check
-		SimpleDateFormat that = (SimpleDateFormat) obj;
-		return (pattern.equals(that.pattern) && formatData.equals(that.formatData));
+		return true;
 	}
 
 //    /**
