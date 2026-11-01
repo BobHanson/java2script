@@ -89,20 +89,25 @@ public class Test_Menu extends JFrame {
 		JMenuBar mb = new JMenuBar();
 		JMenu mb1 = new JMenu("Test1");
 		JMenu mb2 = new JMenu("Testing2");
+		JMenuItem mb2a = new JMenuItem("test-2");
+		mb2a.addActionListener((e)->{
+			System.out.println("test-2 clicked");			
+		});
+		mb2.add(mb2a);
+		
 		JMenuItem mb1a = new JMenuItem("test-1");
 		mb1a.addActionListener((e)->{
 			System.out.println("test-1 clicked");
 			mb2.removeAll();
 			mb1.add(mb1a);
+			mb2.add(mb2a);
 			System.out.println("test-1 removed and re-added");
 			done = true;
 		});
-
 		
 		mb1.setMnemonic('t');
 		mb1a.setMnemonic('1');
 
-		mb1.add(mb1a);
 		mb1.addMenuListener(new MenuListener() {
 
 			@Override
@@ -134,16 +139,8 @@ public class Test_Menu extends JFrame {
 		l = new JLabel("label2");
 		mb1.add(l);
 
-		ActionListener al = new ActionListener() {
+		mb2.add(mb1a);
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				System.out.println("Test_Editor action " + e);
-			}
-
-		};
-
-		mb1a.addActionListener(al);
 
 		return mb;
 	}

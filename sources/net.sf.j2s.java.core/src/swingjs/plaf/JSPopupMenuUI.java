@@ -220,7 +220,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 
 	@Override
 	public void setVisible(boolean b) {
-		hideMenusAndToolTip();
+		closeAllMenus();
+		hideTooltip();
 		if (b) {
 			if (isTainted || menu == null || outerNode == null || DOMNode.firstChild(outerNode) == null) {
 				if (menu == null) {
