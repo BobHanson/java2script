@@ -134,8 +134,9 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 	private JSMenuKeyListener menuKeyListener;
 
 	private static long showTime;
-	
 
+	public boolean haveStickyItems; // tested in JQueryIU menu code
+	
 	public JSPopupMenuUI() {
 		if (j2sSwingMenu == null) {
 			j2sSwingMenu = (api.js.JSSwingMenu) J2S.getSwing();
@@ -220,7 +221,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 
 	@Override
 	public void setVisible(boolean b) {
-		closeAllMenus();
+		closeAllMenus("JSPM:setVisible:" + b);
 		hideTooltip();
 		if (b) {
 			if (isTainted || menu == null || outerNode == null || DOMNode.firstChild(outerNode) == null) {
@@ -246,6 +247,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			int x = /** @j2sNative this.menu.desiredLocationX || */0;
 			int y = /** @j2sNative this.menu.desiredLocationY || */0;
 			setZ(getInheritedZ((JComponent) menu.getInvoker()) + ZOFFSET);
+			checkHaveStickyItems();
 			j2sSwingMenu.showMenu(menu, x, y);
 			showTime = System.currentTimeMillis();
 //		} else {
@@ -258,6 +260,18 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 //			j2sSwingMenu.hideMenu(menu);	
 //	}
 	
+	private void checkHaveStickyItems() {
+		for (int i = menu.getComponentCount(); --i >= 0;) {
+			Component c = menu.getComponent(i);
+			if (c instanceof JMenuItem) {
+				if (((JMenuItem) c).秘getUI().getIsStickyMenuItem()) {
+					haveStickyItems = true;
+					break;
+				}
+			}
+		}
+	}
+
 	@Override
 	public void dispose() {
     DOMNode.dispose(domNode);
@@ -555,7 +569,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
         	} else if (item instanceof JMenuItem) {
         		((JMenuItem) item).doClick();
             	e.consume();
-    	        hideMenusAndToolTip();
+            	if (!((JMenuItem) item).秘getUI().getIsStickyMenuItem())
+            		hideMenusAndToolTip();
         	}
         }
 
@@ -1206,7 +1221,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 		String id = (base == null ? null : (String) DOMNode.getAttr(base, "id"));
 		JComponent c = (base == null ? null : (JComponent) DOMNode.getAttr(base, "data-component"));
 		JSComponentUI tui = (base == null ? null : (JSComponentUI) DOMNode.getAttr(base, "data-ui"));
-		JMenu menu = null;		
+		JMenu menu = null;
+		//System.err.println("JSPMUI.process " + trigger);
 		int eventID = 0;
 		switch (trigger) {
 		case "_hidePopupMenu":
@@ -1235,8 +1251,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 		case "_startOpening":
 			break;
 		case "collapseAll":
-			hideMenusAndToolTip();
 			isMenuOpen = false;
+			closeAllMenus("CSCUI:hideMenus");
 			c = j2smenu.options.jPopupMenu;
 			c.visible = false;
 			JSPopupMenuUI ui = (JSPopupMenuUI) c.getUI();
@@ -1296,7 +1312,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
         return e.isPopupTrigger();
     }
     
-	public static void closeAllMenus() {
+	public static void closeAllMenus(String why) {
 		if (System.currentTimeMillis() - showTime < 100)
 			return;
 		// top-level or submenu:
@@ -1305,20 +1321,32 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			lastInvoker = null;
 	        MenuSelectionManager.defaultManager().setSelectedPath(null);
 		}
-		closeAllMenusNOW();
+		closeAllMenusNOW(why);
 	}
 
-	static void closeAllMenusNOW() {
+	static void closeAllMenusNOW(String why) {
+		//System.out.println("CLOSE ALL NOW:" + why);
 		JSUtil.jQuery.$(".ui-j2smenu").hide().attr("aria-hidden","true").attr("aria-expanded","false");
 		JSUtil.jQuery.$(".ui-j2smenu-node").removeClass("ui-state-active").removeClass("ui-state-focus");
+		isMenuOpen = false;
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public void mouseClicked(MouseEvent e) {
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
+		try {
+		String s = /** @j2sNative e.bdata.jqevent.target.className ||*/ null;
+		String id = /** @j2sNative e.bdata.jqevent.target.id || */ null;
+		System.out.println("mouseClicked " + s + " " + id + " "+ e.getButton() + " " + e.getClickCount() + " " + e.toString());
+		if (s.indexOf("j2smenu") >= 0 || id.indexOf("MenuBar") >= 0)
+			return;
+	} catch (Throwable t) {
+	}
+	closeAllMenus("JSPM:mouseClicked" + e.getSource());
 	}
 
 	@Override
@@ -1332,17 +1360,17 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 	@SuppressWarnings("unused")
 	@Override
 	public void mouseExited(MouseEvent e) {
-		try {
-			if (/**
-				 * @j2sNative 
-				 * e.bdata.jqevent.target.className.indexOf("j2smenu") >= 0 
-				 * || e.bdata.jqevent.target.id.indexOf("MenuBar") >= 0 ||
-				 */
-			false)
-				return;
-		} catch (Throwable t) {
-		}
-		closeAllMenus();
+//		try {
+//		if (/**
+//			 * @j2sNative 
+//			 * e.bdata.jqevent.target.className.indexOf("j2smenu") >= 0 
+//			 * || e.bdata.jqevent.target.id.indexOf("MenuBar") >= 0 ||
+//			 */
+//		false)
+//			return;
+//	} catch (Throwable t) {
+//	}
+//	closeAllMenus("JSPM:mouseExited" + e.getSource());
 	}
 
 

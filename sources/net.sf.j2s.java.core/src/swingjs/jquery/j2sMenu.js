@@ -92,9 +92,22 @@ J2S.__makeMenu = function(){};
  var isDisabled = function(t) { return t && t.is(".ui-state-disabled") }
  var isMenu = function(t) { return t && (t.has(".ui-j2smenu").length > 0) }
  
+ var isSticky = function(a) {
+	 return a && a[0] && a[0].ui && a[0].ui.isStickyMenuItem;
+ }
+ 
+ var checkEvent = function(me, event) {
+	 if (event.originalEvent && event.originalEvent.pointerType == "touch") {
+		 me.mouseState = MODE_TOUCH;			 
+	 } else if (event.type == "pointermove" || event.type == "pointerover") {
+		 me.mouseState = MODE_MOUSE;// TODO menu only
+	 } else if (event.type == "pointerdown" && me.mouseState == MODE_UNKNOWN) {
+		 me.mouseState = MODE_TOUCH;
+	 }
+ }
  var doCmd = function(trigger,me,t,n,why) {
 	 
-	 var debug = function(){}
+	 var debug = function(s){}
 	 
 	 debug("j2sMenu trigger " + trigger + " " + (me.active && me.active[0].innerText.split("\n").join("-")))
 	 
@@ -104,6 +117,9 @@ J2S.__makeMenu = function(){};
 
 	 switch(trigger) {
 	 case "onoutn":
+		 var sticky = isSticky(me.active);
+		 if (me.mouseState == MODE_TOUCH  || sticky)
+			 return;
 		 me._closeMe();
 		 break;
 	 case "onmoven":
@@ -158,8 +174,10 @@ J2S.__makeMenu = function(){};
 				me.element.trigger("setFocus",[!0]);
 				me.active&&me.active.parents(".ui-j2smenu").length===1&&clearMe(me.timer, trigger);
 			} 
-			if (me.mouseState != MODE_TOUCH)
+			checkEvent(me, event);
+			if (me.mouseState != MODE_TOUCH && !isSticky(n)) {
 				doCmd("collapseAll", me, 0, 1);			 
+			}
 		}
 		break;
 	 case "clearClickOut":
@@ -188,13 +206,18 @@ J2S.__makeMenu = function(){};
 		 myMenuBar(target).length == 0 && (myMenu(target).length||me.collapseAll(t));
 	 	return;
 	 case "onleave":
-		 if (me.mouseState != MODE_TOUCH)
+		 var sticky = isSticky(me.active);
+		 checkEvent(me, event);
+		 if (me.mouseState != MODE_TOUCH  && !sticky)
 		   me._closeMe("onleave");
 		 return;
 	 case "onfocus":
 		 n||me.setFocus(t,me.active||me.element.children(".ui-j2smenu-item").eq(0));
 		 return;
 	 case "onblur":
+		 var sticky = isSticky(me.active);
+		 if (me.mouseState == MODE_TOUCH  || sticky)
+			 return;
 		 me.timer = delayMe(me, function(){closeOnLeave(me, t)});
 		 break;
 	 case "_activate":
@@ -326,10 +349,7 @@ J2S.__makeMenu = function(){};
 		 me.clickoutDisabled = true;
 		 // we determine this to be a touch because a 
 		 // focus from DOWN is made before a focus from OVER or MOVE
-		 if (event.type == "pointermove" || event.type == "pointerover")
-			 me.mouseState = MODE_MOUSE;// TODO menu only
-		 else if (event.type == "pointerdown" && me.mouseState == MODE_UNKNOWN)
-			 me.mouseState = MODE_TOUCH;
+		 checkEvent(me, event);
 		 var a = n.first();
 		 var u=n.children(".ui-j2smenu");
 		 var subIsActive = (a[0] == (me.active && me.active[0]));
@@ -372,7 +392,7 @@ J2S.__makeMenu = function(){};
 		 if (isMenu(me.active)) {
 			 // the anchor element is the first child.
 			me.clickoutDisabled = !me.active.children().first().is(".ui-state-active");
-		 } else {
+		 } else if (!isSticky(me.active)) { 
 			me.collapseAll(t,!0);
 		 }
 		 me._trigger("select",t,{item:me.active});
@@ -460,8 +480,8 @@ $.widget("ui.j2smenu",{
 	 this._on({
 		 "click .ui-state-disabled > .a":	function(t){ t.preventDefault() },
 		 "click .ui-j2smenu-item:has(.a)":	function(t){ doCmd("onclick",this,t);},
-                 "pointerdown .ui-j2smenu-item > .a":   function(t){ doCmd("onpress",this,t) },
-                 "pointerup .ui-j2smenu-item > .a":     function(t){ doCmd("onrelease",this,t) },
+         "pointerdown .ui-j2smenu-item > .a":   function(t){ doCmd("onpress",this,t) },
+         "pointerup .ui-j2smenu-item > .a":     function(t){ doCmd("onrelease",this,t) },
 		 "mousedown .ui-j2smenu-item > .a":	function(t){ doCmd("onpress",this,t) },
 		 "mouseup .ui-j2smenu-item > .a":	function(t){ doCmd("onrelease",this,t) },
 		 "mousemove .swingjsPopupMenu ":	function(t){ doCmd("onmovep",this,t,0); },
@@ -701,7 +721,11 @@ Swing.showMenu = function(menu, x, y) {
 	  Swing.updateMenu(menu);
   ensureMouseSet(menu, menu.$ulTop);
   menu.setPosition(x, y);
-  menu.$ulTop.hide().j2smenu("setClickOut").show();  
+  if (menu.ui.haveStickyItems) {
+	  menu.$ulTop.hide().show();  	  
+  } else {
+	  menu.$ulTop.hide().j2smenu("setClickOut").show();  	  
+  }
   menu._visible = true;
   menu.timestamp = System.currentTimeMillis$();
   menu.dragBind(true);

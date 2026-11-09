@@ -59,6 +59,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.function.Function;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -239,6 +240,9 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
     private int baseline;
 
 	int frameZ = 10000;
+
+	private boolean hideTabs;
+
 	public JSTabbedPaneUI() {
 		isContainer = true;
 		setDoc();
@@ -253,6 +257,7 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
 			if (root != null && root.getGlassPane() == c)
 				DOMNode.setVisible(domNode,  false);
 		}
+		hideTabs = Boolean.TRUE.equals(jc.getClientProperty("_j2sHideTabs"));		
 		return updateDOMNodeCUI();
 	}
 
@@ -698,15 +703,15 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
             Insets insets = tabPane.getInsets();
             Insets tabAreaInsets = getTabAreaInsets(placement);
             switch(placement) {
-            case JTabbedPane.TOP:
+            case SwingConstants.TOP:
                 baseline += insets.top + tabAreaInsets.top;
                 return baseline;
-            case JTabbedPane.BOTTOM:
+            case SwingConstants.BOTTOM:
                 baseline = height - insets.bottom -
                     tabAreaInsets.bottom - maxTabHeight + baseline;
                 return baseline;
-            case JTabbedPane.LEFT:
-            case JTabbedPane.RIGHT:
+            case SwingConstants.LEFT:
+            case SwingConstants.RIGHT:
                 baseline += insets.top + tabAreaInsets.top;
                 return baseline;
             }
@@ -727,11 +732,11 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
             JComponent c) {
         super.getBaselineResizeBehavior(c);
         switch(tabPane.getTabPlacement()) {
-        case JTabbedPane.LEFT:
-        case JTabbedPane.RIGHT:
-        case JTabbedPane.TOP:
+        case SwingConstants.LEFT:
+        case SwingConstants.RIGHT:
+        case SwingConstants.TOP:
             return Component.BaselineResizeBehavior.CONSTANT_ASCENT;
-        case JTabbedPane.BOTTOM:
+        case SwingConstants.BOTTOM:
             return Component.BaselineResizeBehavior.CONSTANT_DESCENT;
         }
         return Component.BaselineResizeBehavior.OTHER;
@@ -792,14 +797,14 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
      */
     protected int getBaselineOffset() {
         switch(tabPane.getTabPlacement()) {
-        case JTabbedPane.TOP:
+        case SwingConstants.TOP:
             if (tabPane.getTabCount() > 1) {
                 return 1;
             }
             else {
                 return -1;
             }
-        case JTabbedPane.BOTTOM:
+        case SwingConstants.BOTTOM:
             if (tabPane.getTabCount() > 1) {
                 return -1;
             }
@@ -855,6 +860,9 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
 
     @Override
 	public void paint(Graphics g, JComponent c) {
+		if (hideTabs) {
+			return;
+		}
 		super.paint(g, c);
         int selectedIndex = tabPane.getSelectedIndex();
         int tabPlacement = tabPane.getTabPlacement();
@@ -927,7 +935,6 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
         Rectangle tabRect = rects[tabIndex];
         int selectedIndex = tabPane.getSelectedIndex();
         boolean isSelected = selectedIndex == tabIndex;
-
         if (tabsOpaque || tabPane.isOpaque()) {
             paintTabBackground(g, tabPlacement, tabIndex, tabRect.x, tabRect.y,
                     tabRect.width, tabRect.height, isSelected);
@@ -1041,7 +1048,7 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
                 pcnt++;
             }
         }
-        if (tabPlacement == JTabbedPane.TOP || tabPlacement == JTabbedPane.BOTTOM) {
+        if (tabPlacement == SwingConstants.TOP || tabPlacement == SwingConstants.BOTTOM) {
            return new Polygon(xp, yp, pcnt);
 
         } else { // LEFT or RIGHT
@@ -1102,10 +1109,10 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
 
         SwingUtilities.layoutCompoundLabel((JComponent) tabPane,
                                            metrics, title, icon,
-                                           SwingUtilities.CENTER,
-                                           SwingUtilities.CENTER,
-                                           SwingUtilities.CENTER,
-                                           SwingUtilities.TRAILING,
+                                           SwingConstants.CENTER,
+                                           SwingConstants.CENTER,
+                                           SwingConstants.CENTER,
+                                           SwingConstants.TRAILING,
                                            tabRect,
                                            iconRect,
                                            textRect,
@@ -1338,67 +1345,65 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
         }
     }
 
-    protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
-        int width = tabPane.getWidth();
-        int height = tabPane.getHeight();
-        Insets insets = tabPane.getInsets();
-        Insets tabAreaInsets = getTabAreaInsets(tabPlacement);
+	protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
 
-        int x = insets.left;
-        int y = insets.top;
-        int w = width - insets.right - insets.left;
-        int h = height - insets.top - insets.bottom;
+		int width = tabPane.getWidth();
+		int height = tabPane.getHeight();
+		Insets insets = tabPane.getInsets();
+		Insets tabAreaInsets = getTabAreaInsets(tabPlacement);
 
-        switch(tabPlacement) {
-          case LEFT:
-              x += calculateTabAreaWidth(tabPlacement, runCount, maxTabWidth);
-              if (tabsOverlapBorder) {
-                  x -= tabAreaInsets.right;
-              }
-              w -= (x - insets.left);
-              break;
-          case RIGHT:
-              w -= calculateTabAreaWidth(tabPlacement, runCount, maxTabWidth);
-              if (tabsOverlapBorder) {
-                  w += tabAreaInsets.left;
-              }
-              break;
-          case BOTTOM:
-              h -= calculateTabAreaHeight(tabPlacement, runCount, maxTabHeight);
-              if (tabsOverlapBorder) {
-                  h += tabAreaInsets.top;
-              }
-              break;
-          case TOP:
-          default:
-              y += calculateTabAreaHeight(tabPlacement, runCount, maxTabHeight);
-              if (tabsOverlapBorder) {
-                  y -= tabAreaInsets.bottom;
-              }
-              h -= (y - insets.top);
-        }
+		int x = insets.left;
+		int y = insets.top;
+		int w = width - insets.right - insets.left;
+		int h = height - insets.top - insets.bottom;
 
-            if ( tabPane.getTabCount() > 0 && (contentOpaque || tabPane.isOpaque()) ) {
-            // Fill region behind content area
-            Color color = UIManager.getColor("TabbedPane.contentAreaColor");
-            if (color != null) {
-                g.setColor(color);
-            }
-            else if ( selectedColor == null || selectedIndex == -1 ) {
-                g.setColor(tabPane.getBackground());
-            }
-            else {
-                g.setColor(selectedColor);
-            }
-            g.fillRect(x,y,w,h);
-        }
+		switch (tabPlacement) {
+		case LEFT:
+			x += calculateTabAreaWidth(tabPlacement, runCount, maxTabWidth);
+			if (tabsOverlapBorder) {
+				x -= tabAreaInsets.right;
+			}
+			w -= (x - insets.left);
+			break;
+		case RIGHT:
+			w -= calculateTabAreaWidth(tabPlacement, runCount, maxTabWidth);
+			if (tabsOverlapBorder) {
+				w += tabAreaInsets.left;
+			}
+			break;
+		case BOTTOM:
+			h -= calculateTabAreaHeight(tabPlacement, runCount, maxTabHeight);
+			if (tabsOverlapBorder) {
+				h += tabAreaInsets.top;
+			}
+			break;
+		case TOP:
+		default:
+			y += calculateTabAreaHeight(tabPlacement, runCount, maxTabHeight);
+			if (tabsOverlapBorder) {
+				y -= tabAreaInsets.bottom;
+			}
+			h -= (y - insets.top);
+		}
+		if (tabPane.getTabCount() > 0 && (contentOpaque || tabPane.isOpaque())) {
+			// Fill region behind content area
+			Color color = UIManager.getColor("TabbedPane.contentAreaColor");
+			if (color != null) {
+				g.setColor(color);
+			} else if (selectedColor == null || selectedIndex == -1) {
+				g.setColor(tabPane.getBackground());
+			} else {
+				g.setColor(selectedColor);
+			}
+			g.fillRect(x, y, w, h);
+		}
 
-        paintContentBorderTopEdge(g, tabPlacement, selectedIndex, x, y, w, h);
-        paintContentBorderLeftEdge(g, tabPlacement, selectedIndex, x, y, w, h);
-        paintContentBorderBottomEdge(g, tabPlacement, selectedIndex, x, y, w, h);
-        paintContentBorderRightEdge(g, tabPlacement, selectedIndex, x, y, w, h);
+		paintContentBorderTopEdge(g, tabPlacement, selectedIndex, x, y, w, h);
+		paintContentBorderLeftEdge(g, tabPlacement, selectedIndex, x, y, w, h);
+		paintContentBorderBottomEdge(g, tabPlacement, selectedIndex, x, y, w, h);
+		paintContentBorderRightEdge(g, tabPlacement, selectedIndex, x, y, w, h);
 
-    }
+	}
 
     protected void paintContentBorderTopEdge(Graphics g, int tabPlacement,
                                          int selectedIndex,
@@ -1798,6 +1803,8 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
     }
 
     protected int calculateTabHeight(int tabPlacement, int tabIndex, int fontHeight) {
+        if (hideTabs)
+        	return 0;
         int height = 0;
         Component c = tabPane.getTabComponentAt(tabIndex);
         if (c != null) {
@@ -2996,6 +3003,9 @@ public class JSTabbedPaneUI extends JSPanelUI implements SwingConstants {
 
         @Override
 		public void layoutContainer(Container parent) {
+    		if (hideTabs)
+    			return;
+
             /* Some of the code in this method deals with changing the
              * visibility of components to hide and show the contents for the
              * selected tab. This is older code that has since been duplicated

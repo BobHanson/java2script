@@ -312,7 +312,7 @@ public class ButtonListener
 		String s = b.getUIClassID();
 		if (s == "MenuUI")
 			return true;
-		if (s.indexOf("MenuItemUI") >= 0)
+		if (s.indexOf("MenuItemUI") >= 0 && !b.秘getUI().isStickyMenuItem)
 			JSComponentUI.hideMenusAndToolTip();
 		return false;
 	}

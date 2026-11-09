@@ -14,6 +14,7 @@ public class JSMenuItemUI extends JSButtonUI {
 	
     protected MenuKeyListener menuKeyListener;
 
+    
     /**
 	 * Just a simple menu item -- not radio or checkbox
 	 */
@@ -56,6 +57,7 @@ public class JSMenuItemUI extends JSButtonUI {
 	@Override
 	public void installUI(JComponent jc) {
 		menuItem = (JMenuItem) jc;
+		getIsStickyMenuItem();
 		super.installUI(jc);
 	}	
 

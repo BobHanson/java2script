@@ -53,16 +53,16 @@ import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.UIResource;
 
 import javajs.api.js.HTML5Applet;
+import javajs.api.js.HTML5Applet.JSFunction;
 import sun.awt.CausedFocusEvent.Cause;
 import swingjs.JSFocusPeer;
 import swingjs.JSGraphics2D;
 import swingjs.JSToolkit;
 import swingjs.JSUtil;
 import swingjs.api.js.DOMNode;
-import swingjs.api.js.J2SInterface;
 import swingjs.api.js.DOMNode.JQuery;
 import swingjs.api.js.DOMNode.JQuery.JQueryObject;
-import javajs.api.js.HTML5Applet.JSFunction;
+import swingjs.api.js.J2SInterface;
 
 /**
  * The JSComponentUI subclasses are where all the detailed HTML5 implementation
@@ -826,12 +826,12 @@ public class JSComponentUI extends ComponentUI
 
 	protected static void hideMenusAndToolTip() {
 		if (isMenuOpen)
-			JSPopupMenuUI.closeAllMenus();
+			JSPopupMenuUI.closeAllMenus("JSCUI:hideMenus");
 		hideTooltip();
 	}
 
 	private static Runnable runCloseAllMenusNow = ()->{
-		JSPopupMenuUI.closeAllMenusNOW();
+		JSPopupMenuUI.closeAllMenusNOW("JSCUI:forceCloseAll");
 	};
 	public static void forceCloseAllMenus(int ms) {
 		/** @j2sNative 
@@ -1601,6 +1601,14 @@ public class JSComponentUI extends ComponentUI
 	 * attribute, preventing it being added to its desktop parent.
 	 */
 	protected boolean isSticky;
+
+	
+	/**
+	 * A sticky menu item, identified by jc.getClientProperty("_j2sStickyMenuItem") != null,
+	 * will not close the menu if clicked.
+	 */
+	protected boolean isStickyMenuItem;
+
 
 	/**
 	 * an icon created using "jsvideo" as its description
@@ -3637,11 +3645,16 @@ public class JSComponentUI extends ComponentUI
 	protected void checkStopPopupMenuTimer(Object target, int eventType, Object jQueryEvent) {
 		if (target == domNode && eventType == -1) {
 			String type = (/** @j2sNative jQueryEvent.type || */"");
-			if (type.equals("mouseenter") || type.equals("pointerenter")) {
+			if (getIsStickyMenuItem() || type.equals("mouseenter") || type.equals("pointerenter")) {
 				stopPopupMenuTimer();
 			}
 		}
 	}
+
+	protected boolean getIsStickyMenuItem() {
+		return (isStickyMenuItem = (jc.getClientProperty("_j2sStickyMenuItem") != null));
+	}
+
 
 	/**
 	 * Called from JSMenuUI in a JMenuBar to start a timer that closes the popup window after a short period.
@@ -3906,28 +3919,6 @@ public class JSComponentUI extends ComponentUI
 	}
 
 
-	public int getComponentDistanceToRightEdge(JComponent ref) {
-		// by AI, interpreted by BH
-		// untested
-		float current = parseFloat(DOMNode.getStyle(domNode, "left"));
-		if (Float.isNaN(current))
-			return Integer.MIN_VALUE;
-		DOMNode refNode = ref.秘getUI().domNode;		
-		Rectangle rect = domNode.getBoundingClientRect(); 
-		Rectangle anchor = refNode.getBoundingClientRect(); 
-		int[] lr = new int[2];
-		/**
-		 * @j2sNative
-		 * 
-		 * var viewport = window.visualViewport; 
-		 * lr[0] = (viewport ? viewport.offsetLeft : 0) + 4; 
-		 * lr[1] = (viewport ? viewport.offsetLeft + viewport.width : document.documentElement.clientWidth) - 4; 
-		 */
-		
-		 int target = Math.max(lr[0], Math.min(anchor.x + anchor.width, lr[1]) - rect.width); 
-		 return (int) (target - rect.x);
-	}
-
 
 	/**
 	 * will allow "173px"
@@ -3935,10 +3926,38 @@ public class JSComponentUI extends ComponentUI
 	 * @param s
 	 * @return
 	 */
-	private float parseFloat(String s) {
+	private double parseFloat(String s) {
 		return (/** @j2sNative parseFloat(s) ||*/ Float.NaN); 
 	}
 
 
+	public void alignComponentToContainer(Container container, int insetX, int insetY) {
+		// by AI, interpreted by BH
+		// untested
+		double left = parseFloat(DOMNode.getStyle(domNode, "left"));
+		double top = parseFloat(DOMNode.getStyle(domNode, "top"));
+		if (Double.isNaN(left) || Double.isNaN(top))
+			return;
+		DOMNode refNode = container.秘getUI().domNode;
+		// these are double values; Insets used here because we want left, top, right, bottom
+		Insets rect = (Insets) (Object) domNode.getBoundingClientRect(); 
+		Insets bounds = (Insets) (Object) refNode.getBoundingClientRect(); 
+		
+		// ...............[......node-rect.....]
+		// ...............left....width......... (width includes insets)
+		// [..........ref-bounds....]
+		// left.................right
+		// ....[......node-rect.....]
+		// ....x = right - width
+		// ....<-xoffset-> = x - left
+
+		double width = rect.right - rect.left + insetX;
+		double height = rect.bottom - rect.top + insetY;
+		double x=Math.max(bounds.left, Math.min(rect.left, bounds.right - width));
+		double y=Math.max(bounds.top, Math.min(rect.top, bounds.bottom - height));
+		DOMNode.setStyles(domNode, 
+				"left", (left + x - rect.left) + "px",
+				"top", (top + y - rect.top) + "px");
+	}
 
 }

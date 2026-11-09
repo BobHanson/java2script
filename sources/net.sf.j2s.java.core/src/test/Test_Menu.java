@@ -23,6 +23,7 @@ import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
@@ -47,6 +48,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -74,26 +76,97 @@ public class Test_Menu extends JFrame {
 		new Test_Menu();
 	}
 
+	private static class StickyMenuItem extends JMenuItem {
+
+		public StickyMenuItem(String label) {
+			super(label);
+			putClientProperty("_j2sStickyMenuItem", Boolean.TRUE);
+		}
+
+		@Override
+		protected void processMouseEvent(MouseEvent e) {
+			// Intercept the mouse release event, which triggers the menu closure
+			if (e.getID() == MouseEvent.MOUSE_RELEASED && contains(e.getPoint())) {
+				// Trigger the action listeners manually
+				doClick();
+				// Prevent the parent MenuSelectionManager from clearing the menu selection path
+				return;
+			}
+			super.processMouseEvent(e);
+		}		
+	}
 
 	protected boolean done;
+	private JPopupMenu pmenu;
 
 	public Test_Menu() {
 
 			setJMenuBar(getMenuBar());
+			JPanel p = new JPanel();
+			p.setPreferredSize(new Dimension(300,400));
+			add(p);
+			addPopupMenu(this);
 			pack();
 			setVisible(true);
 		}
+
+
+	private void addPopupMenu(JFrame frame) {
+		addMouseListener(new MouseAdapter() {
+			
+			public void mousePressed(MouseEvent e) {
+				System.out.println("----pressed---" + e);
+				if (e.isPopupTrigger()) {
+					// macs here
+					pmenu.show(frame, e.getX(), e.getY());
+				}
+			}
+
+			public void mouseReleased(MouseEvent e) {
+				System.out.println("----released---" + e);
+				if (e.isPopupTrigger()) {
+					// windows here
+					pmenu.show(frame, e.getX(), e.getY());
+				}
+			}
+
+		});
+		
+		pmenu = new JPopupMenu();
+		JMenuItem b = new JMenuItem("testing1");
+		ActionListener listener = new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("--clicked--"  + e.getSource());
+			}
+			
+		};
+		b.addActionListener(listener);
+		pmenu.add(b);
+		b = new JMenuItem("testing2");
+		b.addActionListener(listener);
+		pmenu.add(b);
+		b = new JMenuItem("testing3");
+		b.addActionListener(listener);
+		pmenu.add(b);
+}
 
 
 	private JMenuBar getMenuBar() {
 		JMenuBar mb = new JMenuBar();
 		JMenu mb1 = new JMenu("Test1");
 		JMenu mb2 = new JMenu("Testing2");
-		JMenuItem mb2a = new JMenuItem("test-2");
+		JMenuItem mb2a = new StickyMenuItem("sticky-2a");
 		mb2a.addActionListener((e)->{
-			System.out.println("test-2 clicked");			
+			System.err.println("---------sticky-2a clicked");			
 		});
 		mb2.add(mb2a);
+		JMenuItem mb2b = new StickyMenuItem("sticky-2b");
+		mb2b.addActionListener((e)->{
+			System.err.println("---------sticky-2b clicked");			
+		});
+		mb2.add(mb2b);
 		
 		JMenuItem mb1a = new JMenuItem("test-1");
 		mb1a.addActionListener((e)->{
@@ -140,7 +213,6 @@ public class Test_Menu extends JFrame {
 		mb1.add(l);
 
 		mb2.add(mb1a);
-
 
 		return mb;
 	}

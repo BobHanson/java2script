@@ -2,6 +2,7 @@ package swingjs.api.js;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.Window;
 import java.util.Hashtable;
 
 import javajs.api.js.HTML5Applet;
@@ -88,6 +89,8 @@ public interface J2SInterface {
 	void __makeMenu();
 
 	void __makeComboBox();
+
+	Window getFrontComponent();
 
 
 }

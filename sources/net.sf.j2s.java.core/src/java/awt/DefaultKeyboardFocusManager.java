@@ -37,6 +37,7 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import javax.swing.JApplet;
+import javax.swing.JComponent;
 
 //import sun.util.logging.PlatformLogger;
 
@@ -334,7 +335,9 @@ public class DefaultKeyboardFocusManager extends KeyboardFocusManager {
 //        }
 		switch (e.getID()) {
 		case MouseEvent.MOUSE_PRESSED:
-		case MouseEvent.MOUSE_CLICKED: // for frames?? BH added
+//		case MouseEvent.MOUSE_CLICKED: // for frames?? BH added !no; event comes too late
+			// BH added 2026.11.04 especially with CLICKED here, we need to NOT do any
+			// focus changes if we already have the focus
 			((JSFocusPeer) peer).checkFrameFocusOnMouseDown(e);
 			//jcMouseDown = (Component) e.getSource();
 			return false;

@@ -2,10 +2,12 @@ package swingjs;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.JSComponent;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.BufferedInputStream;
@@ -37,6 +39,9 @@ import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 import javax.swing.plaf.ComponentUI;
 
+import javajs.api.JSUtilI;
+import javajs.api.js.HTML5Applet;
+import javajs.api.js.HTML5Applet.JSFunction;
 import javajs.api.js.HTML5Applet.Promise;
 import javajs.util.AU;
 import javajs.util.AjaxURLConnection;
@@ -46,11 +51,8 @@ import javajs.util.ZipTools;
 import sun.awt.AppContext;
 import swingjs.api.Interface;
 import swingjs.api.js.DOMNode;
-import javajs.api.JSUtilI;
-import javajs.api.js.HTML5Applet;
-import swingjs.api.js.J2SInterface;
 import swingjs.api.js.DOMNode.JQuery;
-import javajs.api.js.HTML5Applet.JSFunction;
+import swingjs.api.js.J2SInterface;
 import swingjs.json.JSON;
 import swingjs.plaf.JSComponentUI;
 import swingjs.plaf.JSFrameUI;
@@ -1368,8 +1370,8 @@ public class JSUtil implements JSUtilI {
 	}
 
 	@Override
-	public int getComponentDistanceToRightEdge(JComponent c, JComponent ref) {
-			return c.秘getUI().getComponentDistanceToRightEdge(ref);
+	public 	void alignComponentToContainer(JComponent c, Container container, int insetX, int insetY) {
+	   c.秘getUI().alignComponentToContainer(container, insetX, insetY);
 	}
 
 	@Override
@@ -1391,6 +1393,10 @@ public class JSUtil implements JSUtilI {
 		 */
 		return r;
 		
+	}
+
+	public static Window getFrontComponent() {
+		return J2S.getFrontComponent();
 	}
 }
 

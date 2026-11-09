@@ -49,6 +49,10 @@ public interface DOMNode {
 	
 	public void setSelectionRange(int start, int end, String direction);
 
+	/**
+	 * 
+	 * @returns double-value rectangle
+	 */
 	public Rectangle getBoundingClientRect();
 	
 	// static convenience methods

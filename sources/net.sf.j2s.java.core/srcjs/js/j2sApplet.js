@@ -2486,7 +2486,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 		J2S.$bind(who, 'pointerenter mouseenter', function(ev) { return mouseEnter(who, ev) });
 
-		J2S.$bind(who, 'pointerout mouseleave', function(ev) { return mouseLeave(who, ev) });
+		J2S.$bind(who, 'pointerleave mouseleave', function(ev) { return mouseLeave(who, ev) });
 
 		// context menu is fired on mouse down, not up, and it's handled already
 		// anyway.
@@ -2522,7 +2522,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				+'mouseup pointerup pointercancel touchend touchcancel '
 				+'DOMMouseScroll mousewheel contextmenu '
 				+'mouseleave mouseenter mousemoveoutjsmol '
-				+'pointerout pointerenter pointermoveoutjsmol ',
+				+'pointeleave pointerenter pointermoveoutjsmol ',
 				null);
 		J2S.setMouseOwner(null);
 	}
@@ -3808,6 +3808,12 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 
 	}
 
+	var frontWindowNode = null;
+	
+	J2S.getFrontComponent = function() {
+		return frontWindowNode && frontWindowNode.ui.jc;
+	}
+	
 	J2S.setWindowZIndex = function(node, z) {
 		// on frame show or mouse-down, create a stack of frames and sort by
 		// z-order
@@ -3830,8 +3836,9 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		})
 		var zbase = z = J2S._z.rear + 2000;
 		var modalZ = 1e10;
+		var n = null;
 		for (var i = 0, i1 = a.length; i < i1; i++) {
-			var n = a[i][1];
+			n = a[i][1];
 			if (n == node)
 				z = zbase;
 			if (!n.ui || !n.ui.embeddingNode) {
@@ -3847,6 +3854,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			}
 			zbase += 1000;
 		}
+	    frontWindowNode = n;
 		if (!found)
 			z += 1000;
 		node.style.position = "absolute";
@@ -3854,6 +3862,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			z = modalZ - 500;
 		}
 		node.ui.outerNode && (node.ui.outerNode.style.zIndex = z);
+		
 		return z;
 	}
 

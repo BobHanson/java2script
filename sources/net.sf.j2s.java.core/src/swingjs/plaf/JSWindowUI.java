@@ -150,9 +150,13 @@ public class JSWindowUI extends JSComponentUI implements WindowPeer, WindowListe
 				JSComponentUI iui = ((JComponent) menu.getInvoker()).秘getUI();
 				mui.setZ(iui.getInheritedZ() + JSPopupMenuUI.ZOFFSET);
 			}
-			if (mui != null) {
-				forceCloseAllMenus(100);
-			}
+			// BH 2026.11.05 -- this is not a good idea
+			// it causes havoc with the touch interface
+			// and it can't predict the correct sequence of levels
+			// for frames behind frames.
+//			if (mui != null) {
+//				forceCloseAllMenus(100);
+//			}
 	
 		}
 	}

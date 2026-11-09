@@ -8,6 +8,7 @@ import java.awt.JSComponent;
 import java.awt.KeyboardFocusManager;
 import java.awt.Window;
 import java.awt.event.FocusEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.peer.KeyboardFocusManagerPeer;
 import java.beans.PropertyVetoException;
@@ -138,10 +139,17 @@ public class JSFocusPeer implements KeyboardFocusManagerPeer {
 
 	public void checkFrameFocusOnMouseDown(AWTEvent e) {
 		Container p = JSComponent.秘getTopInvokableAncestor((Container) e.getSource(), true);
+		Window w = JSUtil.getFrontComponent();
+		System.err.println("JSFocusPeer.checkFrameFoc p,w:" + p + " " + w);
+		
 		// Table editor mouse down may have p == null
 		if (p == null || getCurrentFocusOwner() != null && p == currentWindow) 
 			return;
-		Window w = currentWindow;
+		// for now, don't process menu openers because of touch issues
+		if (w != null && w == currentWindow)
+			return;
+
+		w = currentWindow;
 		p.dispatchEvent(new WindowEvent((Window) p, WindowEvent.WINDOW_ACTIVATED));
 
 		//oops, windows do not report focus gained 

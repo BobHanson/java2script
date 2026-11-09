@@ -268,7 +268,7 @@ public class JSFrameUI extends JSWindowUI implements FramePeer, JSComponentUI.Em
 			x = Math.max(30 - frame.getWidth(), x);
 			y = Math.max(0, y);
 		}
-		JSPopupMenuUI.closeAllMenus();
+		JSPopupMenuUI.closeAllMenus("JSFrameUI:moveFrame");
 		frame.setLocation(x, y);
 	}
 
