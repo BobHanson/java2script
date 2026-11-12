@@ -3780,9 +3780,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		var evUp = function(ev) {return up && up(fixTouch(ev));};
 		
 		$tag.bind('pointerdown mousedown', evDown);
-
 		$tag.bind('pointermove mousemove', evMove);
-
 		$tag.bind('pointerup pointercancel mouseup', evUp);
 		
 		// suggested by ChatGPT+, overriding document scroll events
