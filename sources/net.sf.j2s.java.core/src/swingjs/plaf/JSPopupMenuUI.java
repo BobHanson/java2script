@@ -127,7 +127,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 	
 	private static api.js.JSSwingMenu j2sSwingMenu;
 
-	private static Component lastInvoker;
+	private static JComponent lastInvoker;
 
 	private JPopupMenu popupMenu;
 
@@ -221,7 +221,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 
 	@Override
 	public void setVisible(boolean b) {
-		closeAllMenus("JSPM:setVisible:" + b);
+		closeAllMenusPvt("JSPM:setVisible:" + b);
 		hideTooltip();
 		if (b) {
 			if (isTainted || menu == null || outerNode == null || DOMNode.firstChild(outerNode) == null) {
@@ -241,7 +241,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 					updateMenu(true);
 				}
 			}
-			lastInvoker = menu.getInvoker();
+			lastInvoker = (JComponent) menu.getInvoker();
+			lastInvoker.getTopLevelAncestor().秘getUI().setOpenMenu(menu);
 			// issue here?? jc.addNotify();
 			//have to cheat here; these values are private to JMenu.
 			int x = /** @j2sNative this.menu.desiredLocationX || */0;
@@ -250,8 +251,12 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			checkHaveStickyItems();
 			j2sSwingMenu.showMenu(menu, x, y);
 			showTime = System.currentTimeMillis();
-//		} else {
-//			hideMenu();
+		} else {
+			lastInvoker = (JComponent) menu.getInvoker();
+			JSComponentUI lastui = lastInvoker.getTopLevelAncestor().秘getUI();
+			if (lastui.openMenu == menu) {
+				lastui.setOpenMenu(null);
+			}		
 		}
 	}
 
@@ -1251,8 +1256,8 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 		case "_startOpening":
 			break;
 		case "collapseAll":
-			isMenuOpen = false;
-			closeAllMenus("CSCUI:hideMenus");
+			//isMenuOpen = false;
+			closeAllMenusPvt("collapseAll:hideMenus");
 			c = j2smenu.options.jPopupMenu;
 			c.visible = false;
 			JSPopupMenuUI ui = (JSPopupMenuUI) c.getUI();
@@ -1266,7 +1271,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 	        MenuSelectionManager.defaultManager().setSelectedPath(null);
 			break;
 		case "setFocus":
-			isMenuOpen = true;
+			//isMenuOpen = true;
 			//System.out.println("pm focus " + id);
 			eventID = MouseEvent.MOUSE_ENTERED;
 			break;
@@ -1312,23 +1317,21 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
         return e.isPopupTrigger();
     }
     
-	public static void closeAllMenus(String why) {
+	private static void closeAllMenusPvt(String why) {
 		if (System.currentTimeMillis() - showTime < 100)
 			return;
+		closeAllMenus(why);
+	}
+
+	public static void closeAllMenus(String why) {		
 		// top-level or submenu:
 		if (lastInvoker != null) {
 			lastInvoker.requestFocus();
 			lastInvoker = null;
 	        MenuSelectionManager.defaultManager().setSelectedPath(null);
 		}
-		closeAllMenusNOW(why);
-	}
-
-	static void closeAllMenusNOW(String why) {
-		//System.out.println("CLOSE ALL NOW:" + why);
 		JSUtil.jQuery.$(".ui-j2smenu").hide().attr("aria-hidden","true").attr("aria-expanded","false");
 		JSUtil.jQuery.$(".ui-j2smenu-node").removeClass("ui-state-active").removeClass("ui-state-focus");
-		isMenuOpen = false;
 	}
 
 	@SuppressWarnings("null")
@@ -1346,7 +1349,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 			return;
 	} catch (Throwable t) {
 	}
-	closeAllMenus("JSPM:mouseClicked" + e.getSource());
+	closeAllMenusPvt("JSPM:mouseClicked" + e.getSource());
 	}
 
 	@Override

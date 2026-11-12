@@ -3,6 +3,8 @@ package javajs.api.js;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import swingjs.api.js.DOMNode;
+
 public interface HTML5Applet {
 
 	/**
@@ -68,5 +70,8 @@ public interface HTML5Applet {
 	void _setAppClass(Object app);
 
 	Object _getMenus();
+
+	void _isolateWindowGestures(DOMNode... nodes);
+
 
 }

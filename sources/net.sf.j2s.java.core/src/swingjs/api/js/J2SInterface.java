@@ -92,6 +92,7 @@ public interface J2SInterface {
 
 	Window getFrontComponent();
 
+	void isolateWindowGestures(DOMNode... nodes);
 
 }
 

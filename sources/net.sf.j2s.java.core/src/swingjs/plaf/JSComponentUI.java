@@ -219,7 +219,7 @@ public class JSComponentUI extends ComponentUI
 		return targetParent;
 	}
 
-	protected JPopupMenu menu;
+	protected JPopupMenu menu, openMenu;
 
 	// MouseInputListener mouseInputListener;
 
@@ -266,10 +266,7 @@ public class JSComponentUI extends ComponentUI
 				actionNode,
 				valueNode,
 		};	
-		DOMNode.setAttr(td, "data-nodes", nodes);
-		
-		//System.err.println("JSCUI td saved " + tableID);
-		
+		DOMNode.setAttr(td, "data-nodes", nodes);		
 		updateTableCell(td, isHeader);
 	}
 
@@ -598,10 +595,10 @@ public class JSComponentUI extends ComponentUI
 
 	protected static JQuery jquery = JSUtil.getJQuery();
 
-	/**
-	 * A static flag indicating that we have a menu open
-	 */
-	protected static boolean isMenuOpen;
+//	/**
+//	 * A static flag indicating that we have a menu open
+//	 */
+//	protected static boolean isMenuOpen;
 
 	/**
 	 * JavaScript menu timer id
@@ -825,14 +822,15 @@ public class JSComponentUI extends ComponentUI
 	}
 
 	protected static void hideMenusAndToolTip() {
-		if (isMenuOpen)
-			JSPopupMenuUI.closeAllMenus("JSCUI:hideMenus");
+		//if (isMenuOpen)
+		JSPopupMenuUI.closeAllMenus("JSCUI:hideMenus");
 		hideTooltip();
 	}
 
 	private static Runnable runCloseAllMenusNow = ()->{
-		JSPopupMenuUI.closeAllMenusNOW("JSCUI:forceCloseAll");
+		JSPopupMenuUI.closeAllMenus("JSCUI:forceCloseAll");
 	};
+	
 	public static void forceCloseAllMenus(int ms) {
 		/** @j2sNative 
 		 * 
@@ -1466,8 +1464,8 @@ public class JSComponentUI extends ComponentUI
 			setIconAndText(prop, currentIcon, currentGap, currentText);
 			return;
 		default:
-			if (debugging)
-				System.out.println("JSComponentUI: unrecognized prop: " + this.id + " " + prop);
+//			if (debugging)
+//				System.out.println("JSComponentUI: unrecognized prop: " + this.id + " " + prop);
 		}
 	}	
 	
@@ -3958,6 +3956,19 @@ public class JSComponentUI extends ComponentUI
 		DOMNode.setStyles(domNode, 
 				"left", (left + x - rect.left) + "px",
 				"top", (top + y - rect.top) + "px");
+	}
+
+
+	public static void testCloseAllMenus(Window w) {
+		JSComponentUI ui = w.秘getUI();
+		if (ui.openMenu != null && ui.openMenu.isVisible()) {
+			ui.openMenu.setVisible(false);
+		}
+	}
+
+
+	public void setOpenMenu(JPopupMenu menu) {
+		openMenu = menu;
 	}
 
 }

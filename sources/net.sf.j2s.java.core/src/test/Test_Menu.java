@@ -1,79 +1,30 @@
 package test;
 
-import java.awt.BorderLayout;
-//import java.awt.Button;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.DefaultKeyboardFocusManager;
 import java.awt.Dimension;
-import java.awt.Font;
-//import java.awt.TextArea;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
-import javax.swing.MenuElement;
-import javax.swing.MenuSelectionManager;
-import javax.swing.Timer;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
-import javax.swing.text.Document;
-import javax.swing.text.Element;
-import javax.swing.text.JTextComponent;
-import javax.swing.text.MutableAttributeSet;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
+
+import swingjs.JSUtil;
 
 public class Test_Menu extends JFrame {
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
-		new Test_Menu();
+		JFrame jf = new Test_Menu();
+		if (/** @j2sNative true || */false) {
+			JSUtil.isolateWindowGesturesStatic(jf);
+		}
 	}
 
 	private static class StickyMenuItem extends JMenuItem {
@@ -113,7 +64,7 @@ public class Test_Menu extends JFrame {
 
 	private void addPopupMenu(JFrame frame) {
 		addMouseListener(new MouseAdapter() {
-			
+
 			public void mousePressed(MouseEvent e) {
 				System.out.println("----pressed---" + e);
 				if (e.isPopupTrigger()) {
@@ -131,16 +82,16 @@ public class Test_Menu extends JFrame {
 			}
 
 		});
-		
+
 		pmenu = new JPopupMenu();
 		JMenuItem b = new JMenuItem("testing1");
 		ActionListener listener = new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("--clicked--"  + e.getSource());
+				System.out.println("--clicked--" + e.getSource());
 			}
-			
+
 		};
 		b.addActionListener(listener);
 		pmenu.add(b);
@@ -150,7 +101,7 @@ public class Test_Menu extends JFrame {
 		b = new JMenuItem("testing3");
 		b.addActionListener(listener);
 		pmenu.add(b);
-}
+	}
 
 
 	private JMenuBar getMenuBar() {

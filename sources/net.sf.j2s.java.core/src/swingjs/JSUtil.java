@@ -36,6 +36,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.sound.sampled.AudioFormat;
 import javax.swing.JComponent;
+import javax.swing.JRootPane;
 import javax.swing.TransferHandler;
 import javax.swing.plaf.ComponentUI;
 
@@ -1397,6 +1398,27 @@ public class JSUtil implements JSUtilI {
 
 	public static Window getFrontComponent() {
 		return J2S.getFrontComponent();
+	}
+	
+	@Override
+	public void isolateWindowGestures(Window frame) {
+		isolateWindowGesturesStatic(frame);
+	}
+
+	public static void isolateWindowGesturesStatic(Window frame) {
+		J2S.isolateWindowGestures(frame.秘getUI().getDOMNode());
+		JRootPane rootPane = frame.getRootPane();
+		if (rootPane != null)
+			J2S.isolateWindowGestures(rootPane.秘getUI().getDOMNode());
+	}
+	
+	@Override
+	public void setFrameResizer(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
+		setFrameResizerStatic(frame, minWidth, minHeight, resizerNodeStyles, rubberBandStyles, useAI);
+	}
+
+	public static void setFrameResizerStatic(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
+		frame.getFrameViewer().getResizer().setFrameResizer(minWidth, minHeight, resizerNodeStyles, rubberBandStyles, useAI);
 	}
 }
 

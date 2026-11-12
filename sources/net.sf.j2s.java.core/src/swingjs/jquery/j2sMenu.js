@@ -674,6 +674,7 @@ Swing.updateMenu = function(menu, andShow) {
     J2S.$after("body",node);
     var m = menu.$ulTop.j2smenu({delay:100, jPopupMenu: menu});
     m.j2smenu('refresh');  
+	ensureMouseSet(menu, menu.$ulTop);
     // this next is critical for SwingJS
 	menu._tainted = false;
 }
@@ -685,9 +686,13 @@ Swing.getInstance = function(menu) {
 var ensureMouseSet = function(menu, node) {
 	// allow mouseup and other events to do their job
 	// for all JMenu and JMenuItem entries
+	// we add a check for any events, because if this is empty, 
+	// then something nefarious removed the events but did not set _menu to null.
+	// this is not supposed to happen. But it does.  I don't know why.
+	// 
     var v = node.find("[role=menuitem]");
     for (var i = v.length; --i >= 0;) {
-    	if (v[i]._menu != menu) {
+    	if (v[i]._menu != menu || !$._data(v[i], "events")) {
     		setMouseMenuItem(menu, v[i]);
     	}
     }
@@ -718,8 +723,9 @@ Swing.showMenu = function(menu, x, y) {
   // TODO: We can't be creating fields in JPopupMenu!
   
   if (menu._tainted)
-	  Swing.updateMenu(menu);
-  ensureMouseSet(menu, menu.$ulTop);
+	  Swing.updateMenu(menu, false);
+  else
+	  ensureMouseSet(menu, menu.$ulTop);
   menu.setPosition(x, y);
   if (menu.ui.haveStickyItems) {
 	  menu.$ulTop.hide().show();  	  

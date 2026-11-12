@@ -212,6 +212,10 @@ public class JSButtonUI extends JSLightweightUI {
 		if (!isDisposed)
 			return;
 		super.undisposeUI(node);
+		if (menuAnchorNode != null) {
+			// This may not have been unset
+			DOMNode.setAttr(menuAnchorNode, "_menu", null);
+		}
 	}
 
 

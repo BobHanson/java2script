@@ -22,8 +22,10 @@ public interface DOMNode {
 	
 
 	public void addEventListener(String event, Object listener);
+	public void addEventListener(String event, Object listener, Object options);
 	public void removeEventListener(String event);
 	public void removeEventListener(String event, Object listener);
+	public void removeEventListener(String event, Object listener, Object options);
 
 
 

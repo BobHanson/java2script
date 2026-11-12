@@ -3,6 +3,7 @@ package swingjs.plaf;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.JSComponent;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyVetoException;
@@ -21,10 +22,43 @@ import swingjs.api.js.JSInterface;
 
 public class Resizer {
 
-	private JRootPane rootPane;
-	private DOMNode resizer, rootNode, rubberBand;
+	private final static String[] defaultResizerNodeStyles = new String[] {
+//			"background-color", "red", 
+			 "z-index", "1000002",
+			 "cursor", "nwse-resize",
+			   "width", "30px",
+			   "height", "30px",
+			   "margin-left", "-15px",
+			   "margin-top", "-15px",					
+			   "background-image", "linear-gradient(red, red)",
+			   "background-repeat", "no-repeat",
+			   "background-position", "center",
+			   "background-size", "10px 10px"
+			};
+	
+	private final static String[] defaultRubberBandStyles = new String[] {
+			"border", "2px dashed #FF00FF", 
+			"z-index", "1000003", 
+			"position", "absolute",
+			"left", "0px", 
+			"top", "0px", 
+			"display", "none", 
+			"pointer-events", "none",
+			"touch-action", "none",
+			"user-select", "none",
+			"webkit-user-select", "none",
+			"cursor", "nwse-resize"			};
+
+	
+	
+	private final static String[] defaultAltResizerNodeStyles = defaultResizerNodeStyles;
+	
+	private final static String[] defaultAltRubberBandStyles = defaultRubberBandStyles;
+	
+	public JRootPane rootPane;
+	public DOMNode resizer, rootNode, rubberBand;
 	private JFrame jframe;
-	private int offsetx = -4, offsety = -4, minSize = 10;
+	private int offsetx = -4, offsety = -4, minWidth = 10, minHeight = 10;
 	private RootPaneContainer rpc;
 	@SuppressWarnings("unused")
 	private int titleHeight;
@@ -62,7 +96,7 @@ public class Resizer {
 	}
 	
 	public void setMin(int min) {
-		minSize = min;
+		minWidth = minHeight = min;
 	}
 	
 	@SuppressWarnings("unused")
@@ -70,14 +104,14 @@ public class Resizer {
 		String id = rootPane.秘htmlName + "_resizer";
 		resizer = DOMNode.createElement("div", id);
 		DOMNode.setSize(resizer, 10, 10);
-		DOMNode.setStyles(resizer, "background-color", "red", "opacity", "0", "cursor", "nwse-resize");
+		DOMNode.setStyles(resizer, defaultResizerNodeStyles);
 		JSUtil.jQuery.$(resizer).addClass("swingjs-resizer");
 		rubberBand = DOMNode.createElement("div", id + "_rb");
-		DOMNode.setStyles(rubberBand, "border", "1px dashed #FF00FF", "z-index", "100000", "position", "absolute",
-				"left", "0px", "top", "0px", "display", "none", "pointer-events", "none");
+		DOMNode.setStyles(rubberBand, defaultRubberBandStyles);
 		rootNode.appendChild(resizer);
 		rootNode.appendChild(rubberBand);
-		JSFunction fHandleResizer = null, fHandleDOMResize = null;
+		JSFunction fHandleResizer = null;
+		//, fHandleDOMResize = null;
 		Object me = this;
 		/**
 		 * @j2sNative
@@ -91,11 +125,17 @@ public class Resizer {
 		}
 		// set to track size changes
 		JSUtil.J2S.setDraggable(resizer, new JSFunction[] { fHandleResizer });
-		JSUtil.jQuery.$(rootNode).resize(fHandleDOMResize);
+//		JSUtil.jQuery.$(rootNode).resize(fHandleDOMResize);
 	}
 
+	/**
+	 * @j2sAlias
+	 * 
+	 * @param dw
+	 * @param dh
+	 */
 	public void setPosition(int dw, int dh) {
-		Rectangle r = getFrameOffset(dw, dh);
+		Rectangle r = getFrameRectangle(dw, dh);
 		DOMNode.setTopLeftAbsolute(resizer, r.height + offsety, r.width + offsetx);
 		DOMNode.setSize(rubberBand, r.width, r.height);
 	}
@@ -116,7 +156,7 @@ public class Resizer {
 		case MouseEvent.MOUSE_MOVED:
 			break; // TODO - change cursor? Entry/Exit?
 		case MouseEvent.MOUSE_PRESSED:
-			DOMNode.setStyle(resizer, "background-color", "green");
+			//DOMNode.setStyle(resizer, "background-color", "green");
 			DOMNode.setVisible(rubberBand, true);
 			JSInterface.setCursor("nwse-resize");
 			// set cursor to dragging
@@ -125,24 +165,41 @@ public class Resizer {
 			setPosition(dx, dy);
 			break;
 		case MouseEvent.MOUSE_RELEASED:
-			DOMNode.setStyle(resizer, "background-color", "red");
+			//DOMNode.setStyle(resizer, "background-color", "red");
 			DOMNode.setVisible(rubberBand, false);
 			JSInterface.setCursor("auto");
 			fHandleDOMResize(null, dx, dy);
 		}
 	}
 
+	/**
+	 * @j2alias
+	 * 
+	 * @param event
+	 * @param dw
+	 * @param dh
+	 */
 	protected void fHandleDOMResize(Object event, int dw, int dh) {
 		Rectangle r;
 		if (!enabled)
 			return;
 		if (event == null) {
 			// from above
-			r = getFrameOffset(dw, dh);
+			r = getFrameRectangle(dw, dh);
 		} else {
 			// from some DOM event
 			DOMNode.getCSSRectangle(rootNode, r = new Rectangle());
 		}
+		setFrameDimensions(r);
+		// Toolkit.getEventQueue().postEvent(new ComponentEvent(f,
+		// ComponentEvent.COMPONENT_RESIZED));
+	}
+
+	/**
+	 * 
+	 * @param r
+	 */
+  void setFrameDimensions(Rectangle r) {
 		if (jframe == null) {
 			rootPane.getGraphics().setColor(Color.WHITE);
 			rootPane.getGraphics().fillRect(0, 0, r.width, r.height);
@@ -161,18 +218,16 @@ public class Resizer {
 			}
 		}
 		setPosition(0, 0);
-		// Toolkit.getEventQueue().postEvent(new ComponentEvent(f,
-		// ComponentEvent.COMPONENT_RESIZED));
 	}
 
-  private Rectangle getFrameOffset(int dw, int dh) {
- 	 Rectangle r = ((JSComponent) rpc).getBounds();			
-			// from mouse release
-			if (r.width + dw > minSize)
-				r.width += dw;
-			if (r.height + dh > minSize)
-				r.height += dh;
-			return r;
+  	private Rectangle getFrameRectangle(int dw, int dh) {
+  		Rectangle r = ((JSComponent) rpc).getBounds();			
+		// from mouse release
+		if (r.width + dw > minWidth)
+			r.width += dw;
+		if (r.height + dh > minHeight)
+			r.height += dh;
+		return r;
 	}
 
     /**
@@ -190,6 +245,93 @@ public class Resizer {
 			show();
 		else
 			hide();
+	}
+
+	private boolean isSet;
+
+	/**
+	 * This method propertly assigns touch events and allows for CSS definitions of the resizer square and rubberband.
+	 * 
+	 * @param minWidth
+	 * @param minHeight
+	 * @param resizerNodeStyles
+	 * @param rubberBandStyles
+	 * @param useAI
+	 * @author ChatGPT+, modified by Bob Hanson
+	 */
+	public void setFrameResizer(int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
+		// only once
+		if (minWidth > 0)
+			this.minWidth = minWidth;
+		if (minHeight > 0)
+			this.minHeight = minHeight;
+		try {
+			show();
+			if (useAI) {
+				DOMNode.setStyles(resizer, defaultAltResizerNodeStyles);
+				DOMNode.setStyles(rubberBand, defaultAltRubberBandStyles);
+			} else {
+				DOMNode.setStyles(resizer, defaultResizerNodeStyles);
+				DOMNode.setStyles(rubberBand, defaultRubberBandStyles);
+			}
+			if (resizerNodeStyles != null)
+				DOMNode.setStyles(resizer, resizerNodeStyles);				
+			if (rubberBandStyles != null)
+				DOMNode.setStyles(rubberBand, rubberBandStyles);				
+			// Attach dedicated touch listeners with passive: false 
+			// to prevent iOS Safari scrolling	
+			if(useAI && !isSet)
+				setAltTouchFunctions(resizer, rubberBand);	
+			isSet = true;
+		} catch (Throwable t) {
+			System.err.println("Resizer failed " + t);
+		}
+	}
+
+	@SuppressWarnings("unused")
+	private void setAltTouchFunctions(DOMNode resizerNode, DOMNode rubberBandNode) {
+		Resizer myResizer = this;
+		DOMNode node = rootNode;
+		int mouseDRAGGED = MouseEvent.MOUSE_DRAGGED;
+		int mouseUP = MouseEvent.MOUSE_RELEASED;
+		Object capture = /** @j2sNative { passive: false, capture: true } || */null;
+		JSFunction touchStart = null;
+		Point pt0 = new Point();
+
+		/** @j2sNative				
+	    var handle = function(ev, touch, eventType) {
+	       ev.preventDefault();
+	       ev.stopPropagation();
+	       var dx = touch.pageX - pt0.x;
+	       var dy = touch.pageY - pt0.y;
+	       myResizer.fHandleResizer(null, dx, dy, eventType);	       
+	    };
+	       
+	    var touchStart = function(e) {
+	       if (!e.touches || e.touches.length === 0) return;
+	       var touch = e.touches[0];
+	       pt0.x = touch.pageX;
+	       pt0.y = touch.pageY; 
+	       handle(e, touch, mouseDRAGGED);       
+	       node.addEventListener("touchmove", onTouchMove, capture);
+	       node.addEventListener("touchend", onTouchEnd, capture);
+	       node.addEventListener("touchcancel", onTouchEnd, capture);
+	    };
+
+        var onTouchMove = function(me) {
+          if (!me.touches || me.touches.length === 0) return;
+          handle(me, me.touches[0], mouseDRAGGED);
+        };
+       
+        var onTouchEnd = function(ue) {
+          var touch = (ue.changedTouches && ue.changedTouches.length > 0 ? ue.changedTouches[0] : touch0);
+          handle(ue, touch, mouseUP);
+          node.removeEventListener("touchmove", onTouchMove, capture);
+          node.removeEventListener("touchend", onTouchEnd, capture);
+          node.removeEventListener("touchcancel", onTouchEnd, capture);	         
+       };       
+       */
+		resizer.addEventListener("touchStart", touchStart, capture);
 	}
 
 }

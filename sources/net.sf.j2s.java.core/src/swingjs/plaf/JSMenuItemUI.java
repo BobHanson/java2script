@@ -33,6 +33,7 @@ public class JSMenuItemUI extends JSButtonUI {
 		// add code here for adjustments when changes in bounds or other properties occur.
 		DOMNode.setVisible(domNode, jc.isVisible());
 		setupButton();
+		getIsStickyMenuItem();
 		return domNode;
 	}
 	
@@ -57,7 +58,6 @@ public class JSMenuItemUI extends JSButtonUI {
 	@Override
 	public void installUI(JComponent jc) {
 		menuItem = (JMenuItem) jc;
-		getIsStickyMenuItem();
 		super.installUI(jc);
 	}	
 

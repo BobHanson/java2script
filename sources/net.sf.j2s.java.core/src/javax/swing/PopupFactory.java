@@ -338,10 +338,9 @@ public class PopupFactory {
                               getWindowAncestor(owner) : null;
             HeavyWeightPopup popup = null;
 
-            String name = (contents instanceof JPopupMenu ? "MenuPopup" : "ToolTip") + ++popupCount;
+//            String name = (contents instanceof JPopupMenu ? "MenuPopup" : "ToolTip") + ++popupCount;
             if (window != null) {
                 popup = getRecycledHeavyWeightPopup(window);
-                window.setName(name + "(recycled)");
             }
 
             boolean focusPopup = false;
@@ -359,21 +358,7 @@ public class PopupFactory {
                 }
             }
 
-            if (popup == null 
-            		
-//            		||
-//                ((JWindow) popup.getComponent())
-//                 .getFocusableWindowState() != focusPopup 
-//            
-
-            		)            {
-//
-//                if(popup != null) {
-//                    // The recycled popup can't serve us well
-//                    // dispose it and create new one
-//                    popup._dispose();
-//                }
-
+            if (popup == null) {
                 popup = new HeavyWeightPopup();
                 popup.name = "popup" + (++popupCount);
             }

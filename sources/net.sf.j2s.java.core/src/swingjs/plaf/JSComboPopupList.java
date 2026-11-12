@@ -112,7 +112,6 @@ class JSComboPopupList extends JList {
 			} catch (Throwable t) {
 				// ignore
 			}
-			JSPopupMenuUI.hideMenusAndToolTip();
 			return;
 		}
 		if (j2scb == null)

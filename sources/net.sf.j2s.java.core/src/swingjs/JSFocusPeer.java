@@ -13,8 +13,13 @@ import java.awt.event.WindowEvent;
 import java.awt.peer.KeyboardFocusManagerPeer;
 import java.beans.PropertyVetoException;
 
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+
 import swingjs.api.js.DOMNode;
 import swingjs.api.js.DOMNode.JQuery.JQueryObject;
 import swingjs.plaf.JSComponentUI;
@@ -138,35 +143,37 @@ public class JSFocusPeer implements KeyboardFocusManagerPeer {
 	}
 
 	public void checkFrameFocusOnMouseDown(AWTEvent e) {
-		Container p = JSComponent.秘getTopInvokableAncestor((Container) e.getSource(), true);
-		Window w = JSUtil.getFrontComponent();
-		System.err.println("JSFocusPeer.checkFrameFoc p,w:" + p + " " + w);
-		
+		Container source = (Container) e.getSource();
+		Window myWindow = (Window) JSComponent.秘getTopInvokableAncestor(source, true);
+		if (!(source instanceof AbstractButton))
+			JSComponentUI.testCloseAllMenus(myWindow);
+		Window frontWindow = JSUtil.getFrontComponent();// does not include menus
 		// Table editor mouse down may have p == null
-		if (p == null || getCurrentFocusOwner() != null && p == currentWindow) 
+		if (myWindow == null || getCurrentFocusOwner() != null && myWindow == currentWindow) {
 			return;
+		}
 		// for now, don't process menu openers because of touch issues
-		if (w != null && w == currentWindow)
+		if (frontWindow != null && frontWindow == myWindow) {
 			return;
+		}
+		currentWindow = myWindow;
+		myWindow.dispatchEvent(new WindowEvent((Window) myWindow, WindowEvent.WINDOW_ACTIVATED));
 
-		w = currentWindow;
-		p.dispatchEvent(new WindowEvent((Window) p, WindowEvent.WINDOW_ACTIVATED));
-
-		//oops, windows do not report focus gained 
+		// oops, windows do not report focus gained
 		// handleJSFocus(p, currentWindow, true);
-		setCurrentFocusedWindow((Window) p);
-		if (p instanceof JInternalFrame) {
+		setCurrentFocusedWindow((Window) myWindow);
+		if (myWindow instanceof JInternalFrame) {
 			try {
-				((JInternalFrame) p).setSelected(true);
+				((JInternalFrame) myWindow).setSelected(true);
 			} catch (PropertyVetoException e1) {
 				e1.printStackTrace();
 			}
-		} else if (p instanceof Window) {
-			((Window) p).toFront();
+		} else if (myWindow instanceof Window) {
+			((Window) myWindow).toFront();
 		}
-		if (p.秘isFocusSetAndEnabled()) {
-			((JSComponentUI)((JSComponent) p).ui).focus(); 
-			handleJSFocus(p, w, true);
+		if (myWindow.秘isFocusSetAndEnabled()) {
+			((JSComponentUI) ((JSComponent) myWindow).ui).focus();
+			handleJSFocus(myWindow, frontWindow, true);
 		}
 	}
 

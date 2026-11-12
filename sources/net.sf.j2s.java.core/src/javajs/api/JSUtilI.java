@@ -3,6 +3,7 @@ package javajs.api;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -405,5 +406,19 @@ public interface JSUtilI {
 	Rectangle getMaximumViewport(int marginLeft, int marginTop);
 
 	void alignComponentToContainer(JComponent c, Container container, int insetX, int insetY);
+
+	/**
+	 * Isolates the window DOM node from propagating gestures to the host HTML page in SwingJS.
+	 * Prevents pinch-to-zoom, two-finger pan, overscroll rubber-banding, and touch drag bubbling
+	 * from escaping the Tracker window to the surrounding webpage.
+	 *
+	 * @param window the top-level Window (TFrame)
+	 * 
+	 * @author ChatGPT+
+	 */
+	void isolateWindowGestures(Window frame);
+
+	void setFrameResizer(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles,
+			String[] rubberBandStyles, boolean useAI);
 
 }
