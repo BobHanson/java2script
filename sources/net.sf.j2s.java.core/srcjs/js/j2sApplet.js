@@ -4,6 +4,7 @@
 // AI = Wolfgang Christian wochristian@davidson.edu using ChatGPT+AI
 // WC = Wolfgang Christian wochristian@davidson.edu
 
+// BH 2026.11.15 fixes missing jQuery event wrapper in setDraggable()
 // AI 2026.11.11 adds passive,capture to setDraggable for resizer
 // AI 2026.11.01 adds applet._isolateWindowGestures(DOMNodes[])
 // AI 2026.11.01 avoiding accidental double tap close with touch interface
@@ -183,6 +184,7 @@ window.J2S = J2S = (function() {
 			 */
 			_appletCssClass : "",
 			_appletCssText : "",
+			_fileSaveFunction : [],
 			_fileCache : {}, // a simple object used only in J2S._loadFileData and J2S.loadFileAsynchronously 
 			    // via J2S._checkCache and only for non-js files and only if Info.cacheFiles == true (which it is not in SwingJS)
 			_javaFileCache : null, // a Hashtable, for JSUtil and /TEMP/
@@ -1309,16 +1311,13 @@ if (database == "_" && J2S._serverUrl.indexOf("//your.server.here/") >= 0) {
 		}
 	}
 
-	// J2S._localFileSaveFunction -- // do something local here; Maybe try the
-	// FileSave interface? return true if successful
-
 	J2S.saveFile = J2S._saveFile = function(filename, data, mimetype, encoding) {
 		var isString = (typeof data == "string");
 		if (filename.indexOf(J2S.getGlobal("j2s.tmpdir")) == 0) {
 			return J2S.getSetJavaFileCache().put$O$O(J2S.fixCachePath(filename), (isString ? data.getBytes$S("UTF-8") : data));
 		}
-		if (J2S._localFileSaveFunction
-				&& J2S._localFileSaveFunction(filename, data))
+		if (J2S._fileSaveFunction[filename]
+				&& J2S._fileSaveFunction[filename](filename, data))
 			return "OK";
 		var filename = filename.substring(filename.lastIndexOf("/") + 1);
 		mimetype
@@ -3480,7 +3479,7 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 				&& (applet._canvas.width != w || applet._canvas.height != h)) {
 			applet._newCanvas(true);
 			applet._appletPanel
-					.setDisplay$swingjs_api_js_HTML5Canvas(applet._canvas);
+					.setDisplay$swingjs_api_js_DOMNode_HTML5Canvas(applet._canvas);
 		}
 		applet._appletPanel.setScreenDimension$I$I(w, h);
 		var f = function() {
@@ -3785,10 +3784,10 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 		
 		// suggested by ChatGPT+, overriding document scroll events
 		var capture = {passive:false,capture:true};
-		tag.addEventListener("touchstart", evDown, capture);
-		tag.addEventListener("touchmove", evMove, capture);
-		tag.addEventListener("touchend", evUp, capture);
-		tag.addEventListener("touchcancel", evUp, capture);
+		tag.addEventListener("touchstart", function(e){evDown($.Event(e))}, capture);
+		tag.addEventListener("touchmove", function(e){evMove($.Event(e))}, capture);
+		tag.addEventListener("touchend", function(ev){evUp($.Event(ev))}, capture);
+		tag.addEventListener("touchcancel", function(ev){evUp($.Event(ev))}, capture);
 
 		dragBind(true);
 
@@ -4155,10 +4154,70 @@ if (ev.keyCode == 9 && ev.target["data-focuscomponent"]) {
 			} catch (ex) {
 					System.err.println("j2sApplet.js J2S.Mobile.isolateWindowGestures() failed " + ex);
 			} 	
+		}, 
+		
+		saveFileSafely: function(filename, data, mediaType) {	
+			var name = filename.substring(filename.lastIndexOf("/") + 1);
+			var blob = new Blob([new Uint8Array(data)], {type: mediaType});
+			var url = URL.createObjectURL(blob);
+			var previousFocus = document.activeElement;
+			var overlay = document.createElement("div");
+			overlay.setAttribute("role", "dialog");
+			overlay.setAttribute("aria-modal", "true");
+			overlay.setAttribute("aria-label", "Save File");
+			overlay.style.cssText = "position:fixed;inset:0;z-index:1000001;display:flex;align-items:center;justify-content:center;background:#0009";
+			var panel = document.createElement("div");
+			panel.style.cssText = "background:white;color:#222;padding:24px;border-radius:10px;max-width:85vw;font:16px/1.4 sans-serif";
+			var message = document.createElement("p");
+			message.textContent = "Your file is ready. Tap Download to save " + name + ".";
+			var download = document.createElement("a");
+			download.href = url;
+			download.download = name;
+			download.type = "application/zip";
+			download.textContent = "Download " + name.substring(name.lastIndexOf(".") + 1).toUpperCase();
+			download.style.cssText = "display:inline-block;padding:12px;margin-right:16px";
+			var close = document.createElement("button");
+			close.textContent = "Close";
+			close.style.cssText = "font:inherit;padding:12px";
+			var dismiss = function() {
+			  overlay.remove();
+			  // Do not revoke while Safari may still be starting the download.
+			  window.setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+			  if (previousFocus && previousFocus.isConnected) previousFocus.focus();
+			};
+			close.addEventListener("click", dismiss);
+			overlay.addEventListener("keydown", function(event) {
+			  if (event.key === "Escape") { event.stopPropagation(); dismiss(); }
+			  if (event.key === "Tab") {
+			    event.preventDefault();
+			    (document.activeElement === download ? close : download).focus();
+			  }
+			});
+			panel.appendChild(message);
+			panel.appendChild(download);
+			panel.appendChild(close);
+			overlay.appendChild(panel);
+			document.body.appendChild(overlay);
+			download.focus();
+			return true;
+	    },
+		
+		setSaveFileSafelyFunction: function(targetPath, mediaType) {
+			if (mediaType != null) {
+				J2S._fileSaveFunction[targetPath] = function(fileName, data) { 
+						if (fileName != targetPath) {
+								alert("j2sApplet " + fileName + " != " + targetPath);
+							} 
+						return J2S.Mobile.saveFileSafely(fileName, data, mediaType);
+				};
+			} else {
+				delete J2S._fileSaveFunction[targetPath];
+			}
 		}
-			
 	}
 	
 	J2S.isolateWindowGestures = J2S.Mobile.isolateWindowGestures;
+	
+	J2S.setSaveFileSafelyFunction = J2S.Mobile.setSaveFileSafelyFunction;
 
 })(self.J2S, self.jQuery, window, document);

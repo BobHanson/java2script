@@ -82,7 +82,7 @@ public class ProgressMonitor {
 	private int millisToPopup = 2000;
 	private int min;
 	private int max;
-
+	
 	/**
 	 * Constructs a graphic object that shows progress, typically by filling in a
 	 * rectangular bar as the process nears completion.
@@ -148,7 +148,6 @@ public class ProgressMonitor {
 		@Override
 		public JDialog createDialog(Component parentComponent, String title) {
 			final JDialog dialog;
-
 			Window window = JOptionPane.getWindowForComponent(parentComponent);
 			if (window instanceof JSFrame) {
 				dialog = new JDialog((JSFrame) window, title, false);
@@ -165,8 +164,10 @@ public class ProgressMonitor {
 			contentPane.setLayout(new BorderLayout());
 			contentPane.add(this, BorderLayout.CENTER);
 			//contentPane.add(Box.createVerticalStrut(5), BorderLayout.SOUTH);
+			
 			dialog.pack();
 			dialog.setLocationRelativeTo(parentComponent);
+			dialog.setResizable(false);			
 			dialog.addWindowListener(new WindowAdapter() {
 				boolean gotFocus = false;
 

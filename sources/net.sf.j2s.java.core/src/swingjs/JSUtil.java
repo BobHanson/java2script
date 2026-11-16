@@ -1413,12 +1413,17 @@ public class JSUtil implements JSUtilI {
 	}
 	
 	@Override
-	public void setFrameResizer(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
-		setFrameResizerStatic(frame, minWidth, minHeight, resizerNodeStyles, rubberBandStyles, useAI);
+	public void setFrameResizer(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles) {
+		setFrameResizerStatic(frame, minWidth, minHeight, resizerNodeStyles, rubberBandStyles);
 	}
 
-	public static void setFrameResizerStatic(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
-		frame.getFrameViewer().getResizer().setFrameResizer(minWidth, minHeight, resizerNodeStyles, rubberBandStyles, useAI);
+	public static void setFrameResizerStatic(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles) {
+		frame.getFrameViewer().getResizer().setFrameResizer(minWidth, minHeight, resizerNodeStyles, rubberBandStyles);
+	}
+
+	@Override
+	public void setSaveFileSafelyFunction(String filePath, String mediaType) {
+		J2S.setSaveFileSafelyFunction(filePath, mediaType);
 	}
 }
 

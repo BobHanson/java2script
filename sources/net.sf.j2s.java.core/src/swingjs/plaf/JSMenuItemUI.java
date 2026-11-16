@@ -65,7 +65,7 @@ public class JSMenuItemUI extends JSButtonUI {
 	@Override
 	public void propertyChange(PropertyChangeEvent e) {
 		String prop = e.getPropertyName();
-		if (!jc.isVisible() && prop != "ancestor" && jc.getParent() == null)
+		if (prop != "ancestor" && !jc.isShowing())
 			return;
 		switch (prop) {
 		case "focusPainted":

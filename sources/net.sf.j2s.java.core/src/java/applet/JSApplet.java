@@ -307,6 +307,13 @@ public class JSApplet extends JSPanel {
 			}
 		}
     }
+	
+	@Override
+	public boolean isShowing() {
+		return ((JApplet) this).getRootPane().秘getUI().isConnected();
+	}
+
+
 
     @Override
     public void 秘resizeOriginal(int width, int height) {

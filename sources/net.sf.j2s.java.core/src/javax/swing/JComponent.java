@@ -674,7 +674,7 @@ public abstract class JComponent extends Container {
 				// SwingJS: everything is a JComponent
 				// and probably not do this.
 				// SwingJS TODO -- allow JSpecView-like layer for writing over buttons
-				if (jc != null && jc.isVisible()) {
+				if (jc != null && jc.isShowing()) {
 					jc.getBounds(tmpRect);
 					boolean isContentPane = jc.getRootPane().getContentPane() == jc;
 					Rectangle vr = (

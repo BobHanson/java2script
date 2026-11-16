@@ -363,6 +363,7 @@ public class Test_Applet_Scroll extends JApplet implements ChangeListener, Mouse
 	
 	@Override
 	public void init() {
+		setBackground(Color.green);
 		final JLabel label = new JLabel("hello") {
 			@Override
 			public void paintComponent(Graphics g) {
@@ -381,7 +382,7 @@ public class Test_Applet_Scroll extends JApplet implements ChangeListener, Mouse
 		// label.setBounds(0, 60, 200, 60);
 		setSize(label, 80, 50);
 		label.setBackground(Color.yellow);
-		label.setForeground(Color.BLUE);
+		label.setForeground(Color.blue);
 		label.setOpaque(true);
 		label.setHorizontalAlignment(SwingConstants.RIGHT);
 		label.setVerticalAlignment(SwingConstants.CENTER);
@@ -418,13 +419,13 @@ public class Test_Applet_Scroll extends JApplet implements ChangeListener, Mouse
 
 			@Override
 			public void focusGained(FocusEvent e) {
-				tf.setBackground(Color.BLUE);
+				tf.setBackground(Color.lightGray);
 				System.out.println(p.isFocusable());
 			}
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				tf.setBackground(Color.BLACK);
+				tf.setBackground(Color.yellow);
 			}
 
 		});
@@ -445,7 +446,7 @@ public class Test_Applet_Scroll extends JApplet implements ChangeListener, Mouse
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				label.setBackground(button.isSelected() ? Color.green : Color.yellow);
-				tf.setBackground(Color.black);
+				tf.setBackground(Color.cyan);
 				label.setText("test");
 				// repaint();
 			}
@@ -492,7 +493,7 @@ public class Test_Applet_Scroll extends JApplet implements ChangeListener, Mouse
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				label.setBackground(button3.isSelected() ? Color.green : Color.yellow);
-				tf.setBackground(Color.black);
+				tf.setBackground(Color.orange);
 				label.setText("btn3");
 				// repaint();
 			}

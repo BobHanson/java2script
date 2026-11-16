@@ -324,6 +324,18 @@ if (node)for (var i = 0, n = av.length; i < n;) {
 		}
 	}
 
+	public static boolean isConnected(DOMNode node) {
+		return (/**@j2sNative node && node.isConnected || */false);
+	}
+
+	/**
+	 * NOTE: This class is referenced in j2sApplet using setDisplay$swingjs_api_js_DOMNode_HTML5Canvas(applet._canvas)
+	 * 
+	 * DO not move it to a new class without also revising j2sApplet.
+	 * 
+	 * @author hanso
+	 *
+	 */
 	public interface HTML5Canvas extends DOMNode {
 
 		Context2D getContext(String str2d);
@@ -543,108 +555,108 @@ if (node)for (var i = 0, n = av.length; i < n;) {
 
 	public interface JQuery {
 
-		  JQueryObject $(Object selector);
+		JQueryObject $(Object selector);
 
-		  DOMNode parseXML(String xmlData);
-		  
-		  boolean contains(Object outer, Object inner);
+		DOMNode parseXML(String xmlData);
 
-		  Object parseJSON(String json);
+		boolean contains(Object outer, Object inner);
 
-		  Object data(Object node, String attr);
+		Object parseJSON(String json);
 
-			public interface JQueryObject {
+		Object data(Object node, String attr);
 
-				public interface JQEvent {
+		public interface JQueryObject {
 
-				}
+			public interface JQEvent {
 
-				public abstract void appendTo(Object obj);
+			}
 
-				public abstract JQueryObject append(Object span);
+			public abstract void appendTo(Object obj);
 
-				public abstract void bind(String actions, Object f);
+			public abstract JQueryObject append(Object span);
 
-				public abstract void unbind(String actions);
+			public abstract void bind(String actions, Object f);
 
-				public abstract void on(String eventName, Object f);
+			public abstract void unbind(String actions);
 
-				public abstract JQueryObject focus();
+			public abstract void on(String eventName, Object f);
 
-				public abstract JQueryObject select();
+			public abstract JQueryObject focus();
 
-				public abstract int width();
+			public abstract JQueryObject select();
 
-				public abstract int height();
+			public abstract int width();
 
-				public abstract Insets offset();
+			public abstract int height();
 
-				public abstract void html(String html);
+			public abstract Insets offset();
 
-				public abstract DOMNode get(int i);
+			public abstract void html(String html);
 
-				public abstract String attr(String key);
+			public abstract DOMNode get(int i);
 
-				public abstract JQueryObject attr(String key, String value);
+			public abstract String attr(String key);
 
-				public abstract JQueryObject css(String key, String value);
+			public abstract JQueryObject attr(String key, String value);
 
-				public abstract JQueryObject addClass(String name);
+			public abstract JQueryObject css(String key, String value);
 
-				public abstract JQueryObject removeClass(String name);
+			public abstract JQueryObject addClass(String name);
 
-				public abstract JQueryObject show();
+			public abstract JQueryObject removeClass(String name);
 
-				public abstract JQueryObject hide();
+			public abstract JQueryObject show();
 
-				public abstract JQueryObject resize(Object fHandleResize);
+			public abstract JQueryObject hide();
 
-				/**
-				 * closest ancestor
-				 * 
-				 * @param selector
-				 * @return
-				 */
-				public abstract JQueryObject closest(String selector);
+			public abstract JQueryObject resize(Object fHandleResize);
 
-				/**
-				 * find all descendants
-				 * 
-				 * @param selector
-				 * @return
-				 */
-				public abstract JQueryObject find(String selector);
+			/**
+			 * closest ancestor
+			 * 
+			 * @param selector
+			 * @return
+			 */
+			public abstract JQueryObject closest(String selector);
 
-				public abstract JQueryObject parent();
+			/**
+			 * find all descendants
+			 * 
+			 * @param selector
+			 * @return
+			 */
+			public abstract JQueryObject find(String selector);
 
-				public abstract JQueryObject before(Object obj);
+			public abstract JQueryObject parent();
 
-				public abstract JQueryObject after(Object div);
+			public abstract JQueryObject before(Object obj);
 
-				public abstract JQueryObject scrollTop(int top);
+			public abstract JQueryObject after(Object div);
 
-				/**
-				 * remove from tree, but do not clear events
-				 */
-				public abstract JQueryObject detach(); // like remove(), but does not change event settings
+			public abstract JQueryObject scrollTop(int top);
 
-				/**
-				 * remove from tree and clear all events -- for disposal only
-				 */
-				public abstract JQueryObject remove();
+			/**
+			 * remove from tree, but do not clear events
+			 */
+			public abstract JQueryObject detach(); // like remove(), but does not change event settings
 
-				/**
-				 * fully remove all children, clearing all events
-				 */
-				public abstract JQueryObject empty();
+			/**
+			 * remove from tree and clear all events -- for disposal only
+			 */
+			public abstract JQueryObject remove();
 
-				public abstract DOMNode getElement();
+			/**
+			 * fully remove all children, clearing all events
+			 */
+			public abstract JQueryObject empty();
 
-				public static DOMNode getDOMNode(JQueryObject jnode) {
-					return (jnode == null ? null : ((DOMNode[]) (Object) jnode)[0]);
-				}
-			}		
+			public abstract DOMNode getElement();
 
+			public static DOMNode getDOMNode(JQueryObject jnode) {
+				return (jnode == null ? null : ((DOMNode[]) (Object) jnode)[0]);
+			}
 		}
+
+	}
 
 }

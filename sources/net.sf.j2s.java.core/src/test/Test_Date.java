@@ -23,6 +23,12 @@ strictfp class Test_Date extends Test_{
 		System.out.println(d);
 		String s;
 
+		s = new SimpleDateFormat("MM-dd-yy-hh-mm-ss.SSS").format(new Date()).toString();
+		System.out.println(s);
+
+		s = new SimpleDateFormat("MM-dd-yy-hh-mm-s.S").format(d).toString();
+		System.out.println(s);
+
 		s = new SimpleDateFormat("M/d/yy h:mm").format(d.getTime()).toString();
 		System.out.println(s);
 

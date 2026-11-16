@@ -646,7 +646,8 @@ public abstract class ResourceBundle {
 
 		private void calculateHashCode() {
 			hashCodeCache = name.hashCode() << 3;
-			hashCodeCache ^= locale.hashCode();
+			if (locale != null)
+				hashCodeCache ^= locale.hashCode();
 //            ClassLoader loader = getLoader();
 //            if (loader != null) {
 //                hashCodeCache ^= loader.hashCode();

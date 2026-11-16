@@ -48,12 +48,7 @@ public class Resizer {
 			"user-select", "none",
 			"webkit-user-select", "none",
 			"cursor", "nwse-resize"			};
-
 	
-	
-	private final static String[] defaultAltResizerNodeStyles = defaultResizerNodeStyles;
-	
-	private final static String[] defaultAltRubberBandStyles = defaultRubberBandStyles;
 	
 	public JRootPane rootPane;
 	public DOMNode resizer, rootNode, rubberBand;
@@ -247,7 +242,7 @@ public class Resizer {
 			hide();
 	}
 
-	private boolean isSet;
+//	private boolean isSet;
 
 	/**
 	 * This method propertly assigns touch events and allows for CSS definitions of the resizer square and rubberband.
@@ -259,7 +254,7 @@ public class Resizer {
 	 * @param useAI
 	 * @author ChatGPT+, modified by Bob Hanson
 	 */
-	public void setFrameResizer(int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles, boolean useAI) {
+	public void setFrameResizer(int minWidth, int minHeight, String[] resizerNodeStyles, String[] rubberBandStyles) {//, boolean useAI) {
 		// only once
 		if (minWidth > 0)
 			this.minWidth = minWidth;
@@ -267,71 +262,15 @@ public class Resizer {
 			this.minHeight = minHeight;
 		try {
 			show();
-			if (useAI) {
-				DOMNode.setStyles(resizer, defaultAltResizerNodeStyles);
-				DOMNode.setStyles(rubberBand, defaultAltRubberBandStyles);
-			} else {
-				DOMNode.setStyles(resizer, defaultResizerNodeStyles);
-				DOMNode.setStyles(rubberBand, defaultRubberBandStyles);
-			}
+			DOMNode.setStyles(resizer, defaultResizerNodeStyles);
+			DOMNode.setStyles(rubberBand, defaultRubberBandStyles);
 			if (resizerNodeStyles != null)
 				DOMNode.setStyles(resizer, resizerNodeStyles);				
 			if (rubberBandStyles != null)
 				DOMNode.setStyles(rubberBand, rubberBandStyles);				
-			// Attach dedicated touch listeners with passive: false 
-			// to prevent iOS Safari scrolling	
-			if(useAI && !isSet)
-				setAltTouchFunctions(resizer, rubberBand);	
-			isSet = true;
 		} catch (Throwable t) {
 			System.err.println("Resizer failed " + t);
 		}
-	}
-
-	@SuppressWarnings("unused")
-	private void setAltTouchFunctions(DOMNode resizerNode, DOMNode rubberBandNode) {
-		Resizer myResizer = this;
-		DOMNode node = rootNode;
-		int mouseDRAGGED = MouseEvent.MOUSE_DRAGGED;
-		int mouseUP = MouseEvent.MOUSE_RELEASED;
-		Object capture = /** @j2sNative { passive: false, capture: true } || */null;
-		JSFunction touchStart = null;
-		Point pt0 = new Point();
-
-		/** @j2sNative				
-	    var handle = function(ev, touch, eventType) {
-	       ev.preventDefault();
-	       ev.stopPropagation();
-	       var dx = touch.pageX - pt0.x;
-	       var dy = touch.pageY - pt0.y;
-	       myResizer.fHandleResizer(null, dx, dy, eventType);	       
-	    };
-	       
-	    var touchStart = function(e) {
-	       if (!e.touches || e.touches.length === 0) return;
-	       var touch = e.touches[0];
-	       pt0.x = touch.pageX;
-	       pt0.y = touch.pageY; 
-	       handle(e, touch, mouseDRAGGED);       
-	       node.addEventListener("touchmove", onTouchMove, capture);
-	       node.addEventListener("touchend", onTouchEnd, capture);
-	       node.addEventListener("touchcancel", onTouchEnd, capture);
-	    };
-
-        var onTouchMove = function(me) {
-          if (!me.touches || me.touches.length === 0) return;
-          handle(me, me.touches[0], mouseDRAGGED);
-        };
-       
-        var onTouchEnd = function(ue) {
-          var touch = (ue.changedTouches && ue.changedTouches.length > 0 ? ue.changedTouches[0] : touch0);
-          handle(ue, touch, mouseUP);
-          node.removeEventListener("touchmove", onTouchMove, capture);
-          node.removeEventListener("touchend", onTouchEnd, capture);
-          node.removeEventListener("touchcancel", onTouchEnd, capture);	         
-       };       
-       */
-		resizer.addEventListener("touchStart", touchStart, capture);
 	}
 
 }

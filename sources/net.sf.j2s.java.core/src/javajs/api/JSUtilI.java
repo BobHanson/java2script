@@ -419,6 +419,8 @@ public interface JSUtilI {
 	void isolateWindowGestures(Window frame);
 
 	void setFrameResizer(Window frame, int minWidth, int minHeight, String[] resizerNodeStyles,
-			String[] rubberBandStyles, boolean useAI);
+			String[] rubberBandStyles);
+
+	void setSaveFileSafelyFunction(String filePath, String mediaType);
 
 }

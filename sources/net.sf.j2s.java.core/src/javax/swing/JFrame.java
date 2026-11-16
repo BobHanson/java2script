@@ -269,6 +269,7 @@ RootPaneContainer// TransferHandler.HasGetTransferHandler
 		setRootPane(createRootPane());
 		rootPane.setFrameViewer(setFrameViewer(null));
 		setBackground(UIManager.getColor("control"));
+//		rootPane.秘getUI().setBackground(UIManager.getColor("control"));
 		setRootPaneCheckingEnabled(true);
 		if (JFrame.isDefaultLookAndFeelDecorated()) {
 			boolean supportsWindowDecorations = UIManager.getLookAndFeel().getSupportsWindowDecorations();

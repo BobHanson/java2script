@@ -1297,7 +1297,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 		}
 		// delay any closures for 100 ms
 		showTime = System.currentTimeMillis();
-		if (e != null && eventID != 0 && c != null) {
+		if (e != null && eventID != 0 && c != null && c.isShowing()) {
 				JSMouse.retargetMouseEvent(e, base, c, c, eventID);
 		}
 	}
@@ -1345,7 +1345,7 @@ public class JSPopupMenuUI extends JSPanelUI implements ContainerListener, Mouse
 		String s = /** @j2sNative e.bdata.jqevent.target.className ||*/ null;
 		String id = /** @j2sNative e.bdata.jqevent.target.id || */ null;
 		System.out.println("mouseClicked " + s + " " + id + " "+ e.getButton() + " " + e.getClickCount() + " " + e.toString());
-		if (s.indexOf("j2smenu") >= 0 || id.indexOf("MenuBar") >= 0)
+		if (s != null && s.indexOf("j2smenu") >= 0 || id != null && id.indexOf("MenuBar") >= 0)
 			return;
 	} catch (Throwable t) {
 	}

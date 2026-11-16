@@ -46,8 +46,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+
 import sun.util.locale.provider.LocaleProviderAdapter;
-import sun.util.locale.provider.LocaleServiceProviderPool;
 
 /**
  * {@code DateFormat} is an abstract class for date/time formatting subclasses which

@@ -70,7 +70,7 @@ public class JSMenuUI extends JSMenuItemUI implements MenuListener {
 	public void propertyChange(PropertyChangeEvent e) {
 		String prop = e.getPropertyName();
 		// System.out.println("JSMenuUI prop " + prop);
-		if (jc.isVisible()) {
+		if (jc.isShowing()) {
 			if (prop == "ancestor") {
 				rebuild();
 			}

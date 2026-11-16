@@ -935,4 +935,9 @@ public abstract class JSComponent extends Component {
 		return true;
 	}
 
+	@Override
+	public boolean isShowing() {
+		return 秘getUI().isConnected() && isRecursivelyVisible();
+	}
+
 }

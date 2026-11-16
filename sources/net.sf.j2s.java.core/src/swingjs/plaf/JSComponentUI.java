@@ -3854,7 +3854,7 @@ public class JSComponentUI extends ComponentUI
 	}
 
 	public boolean isDisplayable() {
-		return !isDisposed && domNode != null;
+		return !isDisposed && isConnected();
 	}
 
 	private JSFunction pasteHandler;
@@ -3969,6 +3969,11 @@ public class JSComponentUI extends ComponentUI
 
 	public void setOpenMenu(JPopupMenu menu) {
 		openMenu = menu;
+	}
+
+
+	public boolean isConnected() {
+		return DOMNode.isConnected(domNode);
 	}
 
 }

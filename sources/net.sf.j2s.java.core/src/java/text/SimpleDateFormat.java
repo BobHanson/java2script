@@ -604,23 +604,23 @@ public class SimpleDateFormat extends DateFormat {
 		isSimpleMMDDYY = isSimple(pattern);
 		isISO8601 = pattern.startsWith("yyyy-MM-dd'T'HH:mm:ss");
 	}
-	
+
 	private void initializeNumberFormat() {
 		if (compiledPattern == null) {
 			// Verify and compile the given pattern.
 			compiledPattern = compile(pattern);
 		}
 
-			/* try the cache first */
-			numberFormat = getCachedNumberFormatData(locale);
-			if (numberFormat == null) { /* cache miss */
-				numberFormat = NumberFormat.getIntegerInstance(locale);
-				numberFormat.setGroupingUsed(false);
+		/* try the cache first */
+		numberFormat = getCachedNumberFormatData(locale);
+		if (numberFormat == null) { /* cache miss */
+			numberFormat = NumberFormat.getIntegerInstance(locale);
+			numberFormat.setGroupingUsed(false);
 
-				/* update cache */
-				cachedNumberFormatData.put(locale, numberFormat);
-			}
-			numberFormat = (NumberFormat) numberFormat.clone();
+			/* update cache */
+			cachedNumberFormatData.put(locale, numberFormat);
+		}
+		numberFormat = (NumberFormat) numberFormat.clone();
 	}
 
 	private static NumberFormat getCachedNumberFormatData(Locale key) {
@@ -643,7 +643,7 @@ public class SimpleDateFormat extends DateFormat {
 		if (locale == null && (isParse || !isSimpleMMDDYY && !isISO8601))
 			locale = Locale.getDefault();
 	}
-	
+
 	private void initializeCalendar() {
 		if (calendar != null)
 			return;
@@ -914,7 +914,7 @@ public class SimpleDateFormat extends DateFormat {
 		return super.format(date);
 	}
 
-	private boolean isSimple(String pattern) {//, Locale locale) {
+	private boolean isSimple(String pattern) {// , Locale locale) {
 		if ((/** @j2sNative false && */
 		true))
 			return false;
@@ -935,6 +935,7 @@ public class SimpleDateFormat extends DateFormat {
 			case 'y':
 			case 'h':
 			case 'm':
+			case 'S': // milliseconds
 			case 's':
 				break;
 			default:
@@ -956,7 +957,7 @@ public class SimpleDateFormat extends DateFormat {
 	// 01234567890123456789
 	private final static String[] fields = { "yyyy", "yy", "MM", "M", "dd", "d", "hh", "h", "HH", "H", "kk", "k", "mm",
 			"m", "ss", "s" };
-	private final static int[] fieldlens = { 4, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1 };
+	private final static int[] fieldlens = { 4, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 3, 1 };
 	private final static int[] fieldzero = { 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
 	private final static int[] adj = { 0, 0, 3, 3, 0, 0, 12, 12, 23, 23, 24, 24, 0, 0, 0, 0 };
 	private final static int[] isopts = { 0, 2, 5, 5, 8, 8, 11, 11, 11, 11, 11, 11, 14, 14, 17, 17 };
@@ -975,6 +976,17 @@ public class SimpleDateFormat extends DateFormat {
 			int pt = ret.indexOf(fields[i]);
 			if (pt >= 0) {
 				ret = rep(ret, pt, fieldlens[i], fieldzero[i], loc, locpts[i], adj[i], loclens[i]);
+			}
+		}
+		// milliseconds
+		int pt = ret.indexOf("S");
+		if (pt >= 0) {
+			int ms = /** @j2sNative date.getMilliseconds() | */0;
+			if (ret.indexOf("SSS") == pt) {
+				String s = "000" + ms;
+				ret = ret.substring(0, pt) + s.substring(s.length() - 3) + ret.substring(pt + 3);
+			} else {
+				ret = ret.substring(0, pt) + ms + ret.substring(pt + 1);
 			}
 		}
 		if (sb == null)
@@ -1009,7 +1021,7 @@ public class SimpleDateFormat extends DateFormat {
 		return p.substring(0, pt) + v + p.substring(pt + flen);
 	}
 
-	// Called from Format after creating a FieldDelegate
+		// Called from Format after creating a FieldDelegate
 	private StringBuffer format(Date date, StringBuffer toAppendTo, FieldDelegate delegate) {
 		// Convert input date to time field list
 		getCalendar().setTime(date);
@@ -1044,8 +1056,8 @@ public class SimpleDateFormat extends DateFormat {
 
 	private void checkPattern() {
 		if (pattern == null) {
-	        applyPatternImpl(LocaleProviderAdapter.getResourceBundleBased().getLocaleResources(locale)
-                    .getDateTimePattern(SHORT, SHORT, getCalendar()));
+			applyPatternImpl(LocaleProviderAdapter.getResourceBundleBased().getLocaleResources(locale)
+					.getDateTimePattern(SHORT, SHORT, getCalendar()));
 		}
 	}
 
@@ -1520,7 +1532,7 @@ public class SimpleDateFormat extends DateFormat {
 		initializeLocale(isParse);
 		initializeNumberFormat();
 		if (isParse) {
-			initializeCalendar();			
+			initializeCalendar();
 		}
 	}
 
@@ -2253,8 +2265,7 @@ public class SimpleDateFormat extends DateFormat {
 		SimpleDateFormat that = (SimpleDateFormat) obj;
 		if (pattern == null || that.pattern == null)
 			return false;
-		if (!pattern.equals(that.pattern) || 
-				useDateFormatSymbols && !formatData.equals(that.formatData))
+		if (!pattern.equals(that.pattern) || useDateFormatSymbols && !formatData.equals(that.formatData))
 			return false;
 		if (!super.equals(obj))
 			return false; // super does class check

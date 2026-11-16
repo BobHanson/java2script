@@ -1,5 +1,6 @@
 package swingjs.plaf;
 
+import java.applet.JSApplet;
 import java.beans.PropertyChangeEvent;
 
 import javax.swing.JApplet;
@@ -61,7 +62,6 @@ public class JSAppletUI extends JSLightweightUI {
 		focusNode = (DOMNode) canvas;
 		return (HTML5Canvas) canvas;
 	}
-
 
 //	@Override
 //	public boolean isFocusable() {

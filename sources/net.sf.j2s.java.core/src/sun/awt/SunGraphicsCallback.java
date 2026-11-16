@@ -76,7 +76,7 @@ public abstract class SunGraphicsCallback {
     public final void runOneComponent(Component comp, Rectangle bounds,
                                       Graphics g, Shape clip,
                                       int weightFlags) {
-        if (comp == null /* || !comp.isLightweight() getPeer() == null*/ || !comp.isVisible()) {
+        if (comp == null /* || !comp.isLightweight() getPeer() == null*/ || !comp.isShowing()) {
             return;
         }
         boolean lightweight = true;//comp.isLightweight();

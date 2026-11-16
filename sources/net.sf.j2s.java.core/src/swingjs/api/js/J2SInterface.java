@@ -94,5 +94,7 @@ public interface J2SInterface {
 
 	void isolateWindowGestures(DOMNode... nodes);
 
+	void setSaveFileSafelyFunction(String filePath, String mediaType);
+
 }
 

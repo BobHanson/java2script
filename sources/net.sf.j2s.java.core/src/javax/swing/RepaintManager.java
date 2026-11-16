@@ -376,7 +376,7 @@ public class RepaintManager {
 		Component root = null;
 
 		for (Component c = validateRoot; c != null; c = c.getParent()) {
-			if (!c.isVisible()
+			if (!c.isShowing()
 			// SwingJS || (c.getPeer() == null)
 			) {
 				//System.out.println("RM noVisibleParent");
@@ -475,7 +475,7 @@ public class RepaintManager {
 		// it could lead to the possibility of getting locks out
 		// of order and deadlocking.
 		for (Container p = c; p != null; p = p.getParent()) {
-			if (!p.isVisible() || p.getPeer() == null) {
+			if (!p.isShowing() || p.getPeer() == null) {
 				return;
 			}
 			if (p.isWindowOrJSApplet()) {

@@ -946,7 +946,7 @@ public class JSToolBarUI extends JSPanelUI {
 				}
 
 				dragWindow.setLocation(dragPoint.x, dragPoint.y);
-				if (dragWindow.isVisible() == false) {
+				if (!dragWindow.isVisible()) {
 					Dimension size = toolBar.getPreferredSize();
 					dragWindow.setSize(size.width, size.height);
 					dragWindow.show();

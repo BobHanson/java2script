@@ -1,7 +1,11 @@
 package swingjs.plaf;
 
 import java.awt.Dimension;
+import java.awt.Window;
+
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 
 import swingjs.api.js.DOMNode;
 
@@ -23,11 +27,13 @@ public class JSRootPaneUI extends JSLightweightUI {
 		if (domNode == null) {
 			domNode = newDOMObject("div", id);
 			addFocusHandler();
+			//allowPaintedBackground = !jc.isOpaque();
+			DOMNode.setStyle(domNode,  "background", (jc.isOpaque() ? toCSSString(jc.getBackground()) : "transparent"));				
 		}
 		checkAllowDivOverflow();
 		return domNode;
 	}
-
+	
 	@Override
 	public void installUI(JComponent jc) {
 	}
@@ -42,11 +48,20 @@ public class JSRootPaneUI extends JSLightweightUI {
   	return null;
   }
 
+	@SuppressWarnings("unused")
 	@Override
 	protected void setInnerComponentBounds(int width, int height) {
-		Resizer resizer = jc.getFrameViewer().getResizer();
-		if (resizer != null)
-			resizer.setPosition(0, 0);
+		boolean isResizable = true;
+		try{
+			isResizable = ((JFrame)jc.getParent()).isResizable();
+			if (isResizable) {
+				Resizer resizer = jc.getFrameViewer().getResizer();
+				if (resizer != null)
+					resizer.setPosition(0, 0);		
+			}
+		} catch (Throwable t) {
+			
+		}
 	}
 	
 }
