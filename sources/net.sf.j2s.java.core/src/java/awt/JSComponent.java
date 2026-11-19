@@ -124,7 +124,7 @@ public abstract class JSComponent extends Component {
 	public JSGraphics2D 秘g;
 	public JSGraphics2D 秘gtemp; // indicates that we are painting, so that g.setBackground() should also be set 
 
-	public boolean 秘isRootPane, 秘isContentPane;
+	public boolean 秘isRootPane, 秘isContentPane, 秘isLayeredPane, 秘isMenuBar;
 	// initially, we go with the current thread, but later we will pick up the actual JSAppletViewer
 	public JSAppletViewer 秘appletViewer = Thread.currentThread().getThreadGroup().秘appletViewer;
 	public JSFrameViewer 秘frameViewer, 秘topFrameViewer;

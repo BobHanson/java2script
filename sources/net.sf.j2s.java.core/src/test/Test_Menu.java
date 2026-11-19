@@ -1,6 +1,7 @@
 package test;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -8,11 +9,13 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -53,12 +56,20 @@ public class Test_Menu extends JFrame {
 	public Test_Menu() {
 
 			setJMenuBar(getMenuBar());
+
 			JPanel p = new JPanel();
 			p.setPreferredSize(new Dimension(300,400));
 			add(p);
 			addPopupMenu(this);
 			pack();
 			setVisible(true);
+
+			p = new JPanel();
+			getLayeredPane().add(p, JLayeredPane.LAYER_PROPERTY);
+		    Point p0 = SwingUtilities.convertPoint(p, 0, 0, getLayeredPane());
+		    System.out.println(p0);
+
+			
 		}
 
 

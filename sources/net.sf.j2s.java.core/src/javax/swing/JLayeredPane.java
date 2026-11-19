@@ -205,6 +205,7 @@ public class JLayeredPane extends JComponent /* implements Accessible */ {
 	}
 
 	protected void initLayeredPane() {
+		秘isLayeredPane = true;
 		updateUI();
 		setLayout(null);
 	}
@@ -600,6 +601,17 @@ public class JLayeredPane extends JComponent /* implements Accessible */ {
         return results;
     }
 
+	@Override
+	protected void paintChildren(Graphics g) {
+		for (int i = getComponentCount(); --i >= 0;) {
+			JComponent c = (JComponent) getComponent(i);
+			if (c.秘isContentPane) {
+				秘c0 = c.getY();
+				break;
+			}
+		}
+		super.paintChildren(g);
+	}
     /**
      * Paints this JLayeredPane within the specified graphics context.
      *

@@ -3774,7 +3774,7 @@ public class JSComponentUI extends ComponentUI
 		if (allowPaintedBackground)
 			DOMNode.setStyle(domNode, "background", "transparent");
 	}
-	
+
 	public void paintBackground(JSGraphics2D g) {
 		Color color = (this.backgroundColor == null ? getBackground() : this.backgroundColor);
 		if (color == null)

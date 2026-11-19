@@ -36,10 +36,13 @@ import java.text.AttributedCharacterIterator;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.swing.JComponent;
+
 import swingjs.api.js.DOMNode;
 import swingjs.api.js.DOMNode.HTML5Canvas;
 import swingjs.api.js.DOMNode.HTML5Canvas.Context2D;
 import swingjs.api.js.DOMNode.HTML5Canvas.Context2D.ImageData;
+import swingjs.plaf.JSGraphicsUtils;
 
 // BH 9/18/2018 fill3DRect fix
 // BH 6/2018 adds g.copyArea(x,y,width,height,dx,dy)
@@ -50,7 +53,7 @@ import swingjs.api.js.DOMNode.HTML5Canvas.Context2D.ImageData;
  * @author Bob Hanson hansonr@stolaf.edu
  */
 
-public class JSGraphics2D implements
+public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		// Graphics2D,
 		Cloneable {
 
@@ -69,7 +72,7 @@ public class JSGraphics2D implements
 
 	private Context2D ctx;
 	
-	public Context2D getContext2D() {
+	@Override public Context2D getContext2D() {
 		return ctx;
 	}
 	private GraphicsConfiguration gc;
@@ -80,11 +83,11 @@ public class JSGraphics2D implements
 	private AlphaComposite alphaComposite;
 	private int initialState;
 
-	// public int strokeState;
-	// public int transformState;
-	// public int clipState;
+	// @Override public int strokeState;
+	// @Override public int transformState;
+	// @Override public int clipState;
 
-	// public Color foregroundColor;
+	// @Override public Color foregroundColor;
 	boolean isShifted;// private, but only JavaScript
 	private Font font;
 
@@ -118,9 +121,11 @@ public class JSGraphics2D implements
 //    can.width = w * pixelRatio;
 //    can.height = h * pixelRatio;
 //    can.getContext("2d").setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
+ 
 	public JSGraphics2D(Object canvas) { // this must be Object, because we are
 											// passing an actual HTML5 canvas
+		this.id = ++idCount;
+		JSGraphicsUtils.pushStack(this);
 		this.canvas = (HTML5Canvas) canvas;
 		ctx = this.canvas.getContext("2d");
 		setStroke(new BasicStroke());
@@ -131,8 +136,6 @@ public class JSGraphics2D implements
 		 *            canvas.height;
 		 * 
 		 */
-		{
-		}
 //		// reduce antialiasing, thank you,
 //		// http://www.rgraph.net/docs/howto-get-crisp-lines-with-no- antialias.html
 		setAntialias(true);
@@ -144,7 +147,7 @@ public class JSGraphics2D implements
 		this.image = image;
 	}
 
-	public void setAntialias(boolean tf) {
+	@Override public void setAntialias(boolean tf) {
 //		if (tf) {
 //			if (!isShifted)
 //				ctx.translate(0.5, 0.5);
@@ -170,11 +173,11 @@ public class JSGraphics2D implements
 	/**
 	 * the SwingJS object
 	 */
-	public GraphicsConfiguration getDeviceConfiguration() {
+	@Override public GraphicsConfiguration getDeviceConfiguration() {
 		return gc;
 	}
 
-	public void drawLine(int x0, int y0, int x1, int y1) {
+	@Override public void drawLine(int x0, int y0, int x1, int y1) {
 		boolean inPath = this.inPath;
 		if (!inPath) {
 			if (x0 == x1 && y0 == y1) {
@@ -190,7 +193,7 @@ public class JSGraphics2D implements
 			doStroke(false);
 	}
 
-	public void drawOval(int left, int top, int width, int height) {
+	@Override public void drawOval(int left, int top, int width, int height) {
 		doStroke(true);
 		if (width == height)
 			doCirc(left, top, width);
@@ -199,7 +202,7 @@ public class JSGraphics2D implements
 		doStroke(false);
 	}
 
-	public void fillOval(int left, int top, int width, int height) {
+	@Override public void fillOval(int left, int top, int width, int height) {
 		ctx.beginPath();
 		if (width == height)
 			doCirc(left, top, width);
@@ -215,13 +218,13 @@ public class JSGraphics2D implements
 		ctx.arc(left + r, top + r, r, 0, 2 * Math.PI, false);
 	}
 
-	public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
+	@Override public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
 		doStroke(true);
 		doArc(x, y, width, height, startAngle, arcAngle, DRAW_NOCLOSE);
 		doStroke(false);
 	}
 
-	public void fillArc(int centerX, int centerY, int width, int height, int startAngle, int arcAngle) {
+	@Override public void fillArc(int centerX, int centerY, int width, int height, int startAngle, int arcAngle) {
 		ctx.beginPath();
 		doArc(centerX, centerY, width, height, startAngle, arcAngle, DRAW_CLOSE);
 		ctx.fill();
@@ -251,7 +254,7 @@ public class JSGraphics2D implements
 		return a * (Math.PI / 180);
 	}
 
-	public void clearRect(int x, int y, int width, int height) {
+	@Override public void clearRect(int x, int y, int width, int height) {
 		clearRectPriv(x, y, width, height);
 	}
 
@@ -264,25 +267,25 @@ public class JSGraphics2D implements
 			setGraphicsColor(foregroundColor);
 	}
 
-	public void drawPolygon(Polygon p) {
+	@Override public void drawPolygon(Polygon p) {
 		// from Graphics
 		doPoly(p.xpoints, p.ypoints, p.npoints, DRAW_CLOSE);
 	}
 
-	public void drawPolygon(int[] axPoints, int[] ayPoints, int nPoints) {
+	@Override public void drawPolygon(int[] axPoints, int[] ayPoints, int nPoints) {
 		doPoly(axPoints, ayPoints, nPoints, DRAW_CLOSE);
 	}
 
-	public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
+	@Override public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
 		doPoly(xPoints, yPoints, nPoints, DRAW_NOCLOSE);
 	}
 
-	public void fillPolygon(Polygon p) {
+	@Override public void fillPolygon(Polygon p) {
 		// from Graphics
 		doPoly(p.xpoints, p.ypoints, p.npoints, FILL);
 	}
 
-	public void fillPolygon(int[] axPoints, int[] ayPoints, int nPoints) {
+	@Override public void fillPolygon(int[] axPoints, int[] ayPoints, int nPoints) {
 		doPoly(axPoints, ayPoints, nPoints, FILL);
 	}
 
@@ -311,7 +314,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void drawRect(int x, int y, int width, int height) {
+	@Override public void drawRect(int x, int y, int width, int height) {
 		// from Graphics
 		if (width <= 0 || height <= 0)
 			return;
@@ -324,17 +327,17 @@ public class JSGraphics2D implements
 			ctx.translate(-0.5, -0.5);
 	}
 
-	public void fillRect(int x, int y, int width, int height) {
+	@Override public void fillRect(int x, int y, int width, int height) {
 		if (width <= 0 || height <= 0)
 			return;
 		ctx.fillRect(x, y, width, height);
 	}
 
-	public void draw3DRect(int x, int y, int width, int height, boolean raised) {
+	@Override public void draw3DRect(int x, int y, int width, int height, boolean raised) {
 		do3DRect(x, y, width, height, raised, DRAW_CLOSE);
 	}
 
-	public void fill3DRect(int x, int y, int width, int height, boolean raised) {
+	@Override public void fill3DRect(int x, int y, int width, int height, boolean raised) {
 		do3DRect(x, y, width, height, raised, FILL);
 	}
 
@@ -366,7 +369,7 @@ public class JSGraphics2D implements
 		setPaint(p);
 	}
 
-	public void setFont(Font font) {
+	@Override public void setFont(Font font) {
 		// this equality check speeds mark/reset significantly
 		if (font == this.font)
 			return;
@@ -378,7 +381,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void setStrokeBold(boolean tf) {
+	@Override public void setStrokeBold(boolean tf) {
 		setLineWidth(tf ? 2. : 1.);
 	}
 
@@ -386,7 +389,7 @@ public class JSGraphics2D implements
 		ctx.lineWidth = d;
 	}
 
-	public boolean canDoLineTo() {
+	@Override public boolean canDoLineTo() {
 		return true;
 	}
 
@@ -394,7 +397,7 @@ public class JSGraphics2D implements
 
 	private Color foregroundColor;
 
-	public void doStroke(boolean isBegin) {
+	@Override public void doStroke(boolean isBegin) {
 		inPath = isBegin;
 		if (isBegin) {
 			if (!thinLine)
@@ -407,7 +410,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void lineTo(int x2, int y2) {
+	@Override public void lineTo(int x2, int y2) {
 		if (inPath) {
 			ctx.lineTo(x2, y2);
 		} else {
@@ -419,7 +422,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void clip(Shape s) {
+	@Override public void clip(Shape s) {
 		ctx.beginPath();
 		doShape(s);
 		// this is not quite right -- the clip is an intersection, not final
@@ -428,7 +431,7 @@ public class JSGraphics2D implements
 		ctx.clip();
 	}
 
-	public void draw(Shape s) {
+	@Override public void draw(Shape s) {
 		ctx.save();
 		doStroke(true);
 		doShape(s);
@@ -436,7 +439,7 @@ public class JSGraphics2D implements
 		ctx.restore();
 	}
 
-	public void drawText(char[] chars, Font font, float x, float y) {
+	@Override public void drawText(char[] chars, Font font, float x, float y) {
 
 		ctx.save();
 		Font f = getFont();
@@ -452,7 +455,7 @@ public class JSGraphics2D implements
 		ctx.restore();
 	}
 
-	public void drawGlyphVector(GlyphVector gv, float x, float y) {
+	@Override public void drawGlyphVector(GlyphVector gv, float x, float y) {
 		JSUtil.notImplemented(null);
 	}
 
@@ -484,7 +487,7 @@ public class JSGraphics2D implements
 		// then fill or stroke or clip
 	}
 
-	public void fill(Shape s) {
+	@Override public void fill(Shape s) {
 		ctx.save();
 		if (shader != null) {
 			ctx.beginPath();
@@ -543,11 +546,11 @@ public class JSGraphics2D implements
 		ctx.restore();
 	}
 
-	public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
+	@Override public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
 		doRoundRect(x, y, width, height, arcWidth, arcHeight, DRAW_CLOSE);
 	}
 
-	public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
+	@Override public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
 		doRoundRect(x, y, width, height, arcWidth, arcHeight, FILL);
 	}
 
@@ -564,7 +567,7 @@ public class JSGraphics2D implements
 			draw(rrect);
 	}
 
-	public boolean drawImage(Image img, int x, int y, Color background, ImageObserver observer) {
+	@Override public boolean drawImage(Image img, int x, int y, Color background, ImageObserver observer) {
 		JSUtil.notImplemented("transparent image pixel background fill is not supported in SwingJS");
 		return drawImage(img, x, y, observer);
 	}
@@ -578,16 +581,16 @@ public class JSGraphics2D implements
 	 * @param observer
 	 * @return
 	 */
-	public boolean drawImage(Image img, int x, int y, ImageObserver observer) {
+	@Override public boolean drawImage(Image img, int x, int y, ImageObserver observer) {
 		return drawImage(img, x, y, img.getWidth(null), img.getHeight(null), observer);
 	}
 
-	public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer) {
+	@Override public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer) {
 		JSUtil.notImplemented("transparent image pixel background fill is not supported in SwingJS");
 		return drawImage(img, x, y, width, height, observer);
 	}
 
-	public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer) {
+	@Override public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer) {
 		if (width <= 0 || height <= 0)
 			return true;
 		if (img != null) {
@@ -608,7 +611,7 @@ public class JSGraphics2D implements
 		return true;
 	}
 
-	public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
+	@Override public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
 			Color bgcolor, ImageObserver observer) {
 		JSUtil.notImplemented("transparent image pixel background fill is not supported in SwingJS");
 		return drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, observer);
@@ -630,7 +633,7 @@ public class JSGraphics2D implements
 	 * @return true
 	 */
 	@SuppressWarnings("unused")
-	public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
+	@Override public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
 			ImageObserver observer) {
 		if (img != null) {
 			byte[] bytes = null;
@@ -652,15 +655,15 @@ public class JSGraphics2D implements
 		return true;
 	}
 
-	public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs) {
+	@Override public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs) {
 		return drawImageXT(img, xform, obs);
 	}
 
-	public void drawRenderedImage(RenderedImage img, AffineTransform xform) {
+	@Override public void drawRenderedImage(RenderedImage img, AffineTransform xform) {
 		drawImageXT((Image) img, xform, null);
 	}
 
-	public void drawRenderableImage(RenderableImage img, AffineTransform xform) {
+	@Override public void drawRenderableImage(RenderableImage img, AffineTransform xform) {
 		drawImageXT((Image) img, xform, null);
 	}
 
@@ -690,7 +693,7 @@ public class JSGraphics2D implements
 	 * @param observer
 	 * @return
 	 */
-	public boolean drawImageFromPixelsOrRaster(Image img, int x, int y, ImageObserver observer) {
+	@Override public boolean drawImageFromPixelsOrRaster(Image img, int x, int y, ImageObserver observer) {
 		return (img == null ? true
 				: drawImagePriv(img, x, y, img.getWidth(observer), img.getHeight(observer), observer));
 	}
@@ -797,19 +800,19 @@ public class JSGraphics2D implements
 		return (m[0] == 1 && m[1] == 0 && m[2] == 0 && m[3] == 1);
 	}
 
-	public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
+	@Override public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
 		JSUtil.notImplemented(null);
 		return false;
 	}
 
-	public Stroke getStroke() {
+	@Override public Stroke getStroke() {
 		return currentStroke;
 	}
 
 	final static int[] nodash = new int[0];
 	
 	@SuppressWarnings("unused")
-	public void setStroke(Stroke s) {
+	@Override public void setStroke(Stroke s) {
 		if (!(s instanceof BasicStroke))
 			return;
 		BasicStroke b = currentStroke = (BasicStroke) s;
@@ -860,20 +863,20 @@ public class JSGraphics2D implements
 		// SwingJS TODO more here
 	}
 
-	public void setRenderingHint(Key hintKey, Object hintValue) {
+	@Override public void setRenderingHint(Key hintKey, Object hintValue) {
 		//hints.put(hintKey, hintValue);
 	}
 
-	public Object getRenderingHint(Key hintKey) {
+	@Override public Object getRenderingHint(Key hintKey) {
 		return null;//
 //		return (hints == null ? null : hints.get(hintKey));
 	}
 
-	public void setRenderingHints(Map<?, ?> hints) {
+	@Override public void setRenderingHints(Map<?, ?> hints) {
 		//this.hints = new RenderingHints(null);//(Map<Key, ?>) hints);
 	}
 
-	public void addRenderingHints(Map<?, ?> hints) {
+	@Override public void addRenderingHints(Map<?, ?> hints) {
 //		if (hints == null)
 //			hints = new RenderingHints(new Hashtable());
 //		for (Entry<?, ?> e : hints.entrySet())
@@ -881,24 +884,24 @@ public class JSGraphics2D implements
 	}
 
 	private static RenderingHints nohints = new RenderingHints(new Hashtable());
-	public RenderingHints getRenderingHints() {
+	@Override public RenderingHints getRenderingHints() {
 		return (hints == null ? nohints : hints);
 	}
 
-	public void setBackground(Color c) {
+	@Override public void setBackground(Color c) {
 		// for clearRect only
 		backgroundColor = c;
 	}
 
-	public Color getBackground() {
+	@Override public Color getBackground() {
 		return backgroundColor;
 	}
 
-	public Color getColor() {
+	@Override public Color getColor() {
 		return foregroundColor;
 	}
 
-	public void setColor(Color c) {
+	@Override public void setColor(Color c) {
 		if (clearing) {
 			clearColorSaved = c;
 		} else {
@@ -907,7 +910,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void setPaint(Paint paint) {
+	@Override public void setPaint(Paint paint) {
 		shader = null;
 		if (paint instanceof Color) {
 			setColor((Color) paint);
@@ -916,34 +919,34 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public Font getFont() {
+	@Override public Font getFont() {
 		if (font == null)
 			font = new Font("Arial", Font.PLAIN, 12);
 		return font;
 	}
 
-	public FontMetrics getFontMetrics() {
+	@Override public FontMetrics getFontMetrics() {
 		// from Graphics
 		return getFontMetrics(getFont());
 	}
 
-	public FontMetrics getFontMetrics(Font f) {
+	@Override public FontMetrics getFontMetrics(Font f) {
 		return Toolkit.getDefaultToolkit().getFontMetrics(f);
 	}
 
-	public void clipRect(int x, int y, int width, int height) {
+	@Override public void clipRect(int x, int y, int width, int height) {
 		// intersect region
 		clipPriv(x, y, width, height);
 	}
 
 	
-	public void setClip(int x, int y, int width, int height) {
+	@Override public void setClip(int x, int y, int width, int height) {
 		if (currentClip != null)// && !currentClip.contains(x, y, width, height))
 			unclip(Integer.MIN_VALUE);
 		clipPriv(x,y, width, height);
 	}
 
-	public void setClip(Shape clip) {
+	@Override public void setClip(Shape clip) {
 		if (clip == null) {
 			clipPriv(0, 0, width, height);
 			return;
@@ -965,7 +968,7 @@ public class JSGraphics2D implements
 		}
 	}
 
-	public void setClipPriv(Shape clip) {
+	@Override public void setClipPriv(Shape clip) {
 		Object c = clip;
 		
 		if (c instanceof int[]) {			
@@ -999,7 +1002,7 @@ public class JSGraphics2D implements
 		ctx.clip();
 	}
 
-	public boolean hitClip(int x, int y, int width, int height) {
+	@Override public boolean hitClip(int x, int y, int width, int height) {
 		// from Graphics
 
 		// Note, this implementation is not very efficient.
@@ -1026,35 +1029,35 @@ public class JSGraphics2D implements
 		ctx.fillStyle = ctx.strokeStyle = JSToolkit.getCSSColor(c, true);
 	}
 
-	public void copyArea(int x, int y, int width, int height, int dx, int dy) {
+	@Override public void copyArea(int x, int y, int width, int height, int dx, int dy) {
 		ctx.putImageData(ctx.getImageData(x, y, width, height), x + dx, y + dy);
 	}
 
-	public Shape getClip() {
+	@Override public Shape getClip() {
 		// This will not be entirely accurate if shapes are involved
 		return (currentClip == null || currentClip instanceof int[] 
 				? getClipBoundsImpl() : (Shape) currentClip);
 	}
 
-	public void drawString(String s, int x, int y) {
+	@Override public void drawString(String s, int x, int y) {
 		fillText(s, x, y);
 	}
 
-	public void drawChars(char[] chars, int x, int y) {
+	@Override public void drawChars(char[] chars, int x, int y) {
 		fillText(String.valueOf(chars), x, y);
 	}
 
-	public void drawChars(char[] data, int offset, int length, int x, int y) {
+	@Override public void drawChars(char[] data, int offset, int length, int x, int y) {
 		// from Graphics
 		drawString(new String(data, offset, length), x, y);
 	}
 
-	public void drawBytes(byte[] data, int offset, int length, int x, int y) {
+	@Override public void drawBytes(byte[] data, int offset, int length, int x, int y) {
 		// from Graphics
 		drawString(new String(data, offset, length), x, y);
 	}
 
-	public void drawString(String str, float x, float y) {
+	@Override public void drawString(String str, float x, float y) {
 		fillText(str, x, y);
 	}
 
@@ -1062,42 +1065,42 @@ public class JSGraphics2D implements
 		ctx.fillText(str, x, y);
 	}
 
-	public void drawString(AttributedCharacterIterator iterator, int x, int y) {
+	@Override public void drawString(AttributedCharacterIterator iterator, int x, int y) {
 		JSUtil.notImplemented(null);
 	}
 
-	public void drawString(AttributedCharacterIterator iterator, float x, float y) {
+	@Override public void drawString(AttributedCharacterIterator iterator, float x, float y) {
 		JSUtil.notImplemented(null);
 	}
 
-	public void translate(double tx, double ty) {
+	@Override public void translate(double tx, double ty) {
 		ctx.translate(tx, ty);
 		transform.translate(tx, ty);
 	}
 
-	public void shear(double shx, double shy) {
+	@Override public void shear(double shx, double shy) {
 		ctx.transform(1.0, shx, 0.0, shy, 1.0, 0.0);
 		transform.shear(shx, shy);
 	}
 
-	public void translate(int x, int y) {
+	@Override public void translate(int x, int y) {
 		ctx.translate(x, y);
 		transform.translate(x, y);
 	}
 
-	public void rotate(double radians) {
+	@Override public void rotate(double radians) {
 		ctx.rotate(radians);
 		transform.rotate(radians);
 	}
 
-	public void rotate(double theta, double x, double y) {
+	@Override public void rotate(double theta, double x, double y) {
 		ctx.translate(x, y);
 		ctx.rotate(theta);
 		ctx.translate(-x, -y);
 		transform.rotate(theta, x, y);
 	}
 
-	public void scale(double sx, double sy) {
+	@Override public void scale(double sx, double sy) {
 		ctx.scale(sx, sy);
 		transform.scale(sx, sy);
 	}
@@ -1107,7 +1110,7 @@ public class JSGraphics2D implements
 	 * 
 	 */
 
-	public void transform(AffineTransform t) {
+	@Override public void transform(AffineTransform t) {
 		transformCTX(t);
 		transform.concatenate(t);
 		Context2D.setMatrix(ctx, null);
@@ -1127,7 +1130,7 @@ public class JSGraphics2D implements
 	 * sets the transform matrix to the given one
 	 */
 
-	public void setTransform(AffineTransform t) {
+	@Override public void setTransform(AffineTransform t) {
 		/**
 		 * @j2sNative
 		 * 
@@ -1144,7 +1147,7 @@ public class JSGraphics2D implements
 	 * Returns a copy of the current transform
 	 */
 
-	public AffineTransform getTransform() {
+	@Override public AffineTransform getTransform() {
 		return (AffineTransform) transform.clone();
 	}
 
@@ -1152,39 +1155,39 @@ public class JSGraphics2D implements
 	// * Returns the current Transform ignoring the "constrain"
 	// * rectangle.
 	// */
-	// public AffineTransform cloneTransform() {
+	// @Override public AffineTransform cloneTransform() {
 	// return (AffineTransform) transform.clone();
 	// }
 	//
 
-	public Paint getPaint() {
+	@Override public Paint getPaint() {
 		return getColor();
 	}
 
-	public FontRenderContext getFontRenderContext() {
+	@Override public FontRenderContext getFontRenderContext() {
 		return getFontMetrics(getFont()).getFontRenderContext();
 	}
 
-	public void setPaintMode() {
+	@Override public void setPaintMode() {
 		setComposite(AlphaComposite.SrcOver);
 	}
 
-	public void setXORMode(Color c) {
+	@Override public void setXORMode(Color c) {
 		if (c == null)
 			throw new IllegalArgumentException("null XORColor");
 		setComposite(AlphaComposite.Xor);
 	}
 
-	public Rectangle getClipRect() {
+	@Override public Rectangle getClipRect() {
 		// from Graphics
 		return getClipBounds();
 	}
 
-	public Rectangle getClipBounds() {
+	@Override public Rectangle getClipBounds() {
 		return getClipBounds(null);
 	}
 
-	public Rectangle getClipBounds(Rectangle r) {
+	@Override public Rectangle getClipBounds(Rectangle r) {
 		Rectangle clipRect = getClipBoundsImpl();
 		if (r == null) {
 			r = clipRect;
@@ -1218,7 +1221,7 @@ public class JSGraphics2D implements
 	 * 
 	 * @param comp AlphaComposite or XORComposite
 	 */
-	public void setComposite(Composite comp) {
+	@Override public void setComposite(Composite comp) {
 		// TODO -- XORComposite
 		// this equality check speeds mark/reset significantly
 		if (comp == this.alphaComposite)
@@ -1243,19 +1246,19 @@ public class JSGraphics2D implements
 		setAlpha(comp == null ? 1 : ((AlphaComposite) comp).getAlpha());
 	}
 
-	public Composite getComposite() {
+	@Override public Composite getComposite() {
 		return alphaComposite;
 	}
 
-	public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y) {
+	@Override public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y) {
 		JSGraphicsCompositor.drawImageOp(this, img, op, x, y);
 	}
 
-	public void setAlpha(float f) {
+	@Override public void setAlpha(float f) {
 		ctx.globalAlpha = f;
 	}
 
-	public HTML5Canvas getCanvas() {
+	@Override public HTML5Canvas getCanvas() {
 		return canvas;
 	}
 
@@ -1278,7 +1281,7 @@ public class JSGraphics2D implements
 	 * 
 	 * @return the length of the ctx._aSaved array after the push
 	 */
-	public int mark() {
+	@Override public int mark() {
 		return mark(false);
 	}
 
@@ -1298,6 +1301,17 @@ public class JSGraphics2D implements
 		return Context2D.push(ctx, map);
 	}
 
+	
+	@Override public String debugStack() {
+		Object[][] stack = Context2D.getSavedStack(ctx);
+		String s = "";
+		for (int i = 0; i < stack.length; i++) {
+			Object[] map = stack[i];
+			s += (i + " " + map[SAVE_TRANSFORM] + " " + map[SAVE_CLIP] + "\n");
+		}			
+		return s;
+	}
+	
 	private boolean unclipped = false;
 
 	/**
@@ -1312,7 +1326,7 @@ public class JSGraphics2D implements
 	 * @param n before code, use n < 0 ("undo") to unclip that many levels, then
 	 *          after code use n > 0 to reset the clip to what is was before
 	 */
-	public void unclip(int n) {
+	@Override public void unclip(int n) {
 		if (debugClip) {
 			System.out.println("JSGraphics2D.unclip " + n);
 		}
@@ -1342,7 +1356,7 @@ public class JSGraphics2D implements
 	 * 
 	 * @param n0
 	 */
-	public void reset(int n0) {
+	@Override public void reset(int n0) {
 		if (n0 < 1)
 			n0 = 1;
 		int n;
@@ -1370,7 +1384,8 @@ public class JSGraphics2D implements
 		currentClip = (Shape) map[SAVE_CLIP];
 	}
 
-	public Graphics create(int x, int y, int width, int height) {
+	
+	@Override public Graphics create(int x, int y, int width, int height) {
 		// from Graphics
 		// cell renderer pane and JComponent
 		Graphics g = create();
@@ -1406,31 +1421,51 @@ public class JSGraphics2D implements
 		if (hints != null) {
 			g.hints = (RenderingHints) hints.clone();
 		}
-		/*
-		 * FontInfos are re-used, so must be cloned too, if they are valid, and be
-		 * nulled out if invalid. The implied trade-off is that there is more to be
-		 * gained from re-using these objects than is lost by having to clone them when
-		 * the SG2D is cloned.
-		 */
-		// if (this.fontInfo != null) {
-		// if (this.validFontInfo) {
-		// g.fontInfo = (FontInfo)this.fontInfo.clone();
-		// } else {
-		// g.fontInfo = null;
-		// }
-		// }
-		// if (this.glyphVectorFontInfo != null) {
-		// g.glyphVectorFontInfo =
-		// (FontInfo)this.glyphVectorFontInfo.clone();
-		// g.glyphVectorFRC = this.glyphVectorFRC;
-		// }
-		// g.invalidatePipe();
 		g.setStroke((BasicStroke) currentStroke.clone());
 		g.initialState = n;
-		return g;
+		return JSGraphicsUtils.pushStack(g);
 	}
 
-	public void dispose() {
+	public JComponent jc;
+	
+	private static int idCount;
+	
+	private int id;
+	
+	@Override public int getID() {
+		return id;
+	}
+	
+	@Override public void setComponent(JComponent c) {
+		jc = c;
+	}
+	
+	@Override public int getWidth() {
+		return width;
+	}
+
+	@Override public int getHeight() {
+		return height;
+	}
+
+	@Override public void dispose() {
+		pop();
+	}
+
+	boolean isDisposed = false;
+	
+	/**
+	 * This can be done as many times as necessary to clear the clip.
+	 * The first time through does the pop and removes the image.
+	 * 
+	 * @return the next graphic on the stack, in case that is of interest.
+	 */
+	public JSGraphics2D pop() {
+		JSGraphics2D g = this;
+		if (!isDisposed) {
+			g = popStack();
+			isDisposed = true;
+		}
 		if (debugClip) {
 			System.out.println("dispose to " + initialState);
 		}
@@ -1439,14 +1474,35 @@ public class JSGraphics2D implements
 			image.秘graphicsDisposed();
 			image = null;
 		}
+		return g;
 	}
 
-	public int getWidth() {
-		return width;
+	/**
+	 * Pop my image off the stack or thrown a RuntimeException if there is no image
+	 * and I am not on the top of the stack.
+	 */
+	private JSGraphics2D popStack() {
+		JSGraphics2D g = (JSGraphics2D) JSGraphicsUtils.peekStack();
+		if (g == this // ok
+				|| image == null // an error
+		) {
+			JSGraphicsUtils.popStack(this, false);
+		}
+		return (g == null ? this : g);
 	}
 
-	public int getHeight() {
-		return height;
+	/** Image graphics can persist */
+	public void setImage(BufferedImage img) {
+		image = img;
+		isDisposed = false;
+		popStack();
+	}
+
+	public void setImage(BufferedImage img, boolean andPop) {
+		image = img;
+		isDisposed = false;
+		if (andPop)
+			popStack();
 	}
 
 }

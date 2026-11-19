@@ -24,26 +24,206 @@
  */
 package swingjs.plaf;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.Composite;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
+import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Paint;
+import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.RenderingHints.Key;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.InputEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ImageObserver;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.RenderableImage;
+import java.text.AttributedCharacterIterator;
+import java.util.Map;
+import java.util.Stack;
 
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import swingjs.api.js.DOMNode.HTML5Canvas;
+import swingjs.api.js.DOMNode.HTML5Canvas.Context2D;
 
 /*
  * @author Hans Muller
  */
 
-public class JSGraphicsUtils
-{
+public class JSGraphicsUtils {
+	
+	public interface JSGraphicsInterface {
+		public AffineTransform getTransform();
+		public boolean canDoLineTo();
+		public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs);
+		public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
+				Color bgcolor, ImageObserver observer);
+		public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2,
+				ImageObserver observer);
+		public boolean drawImage(Image img, int x, int y, Color background, ImageObserver observer);
+		public boolean drawImage(Image img, int x, int y, ImageObserver observer);
+		public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer);
+		public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer);
+		public boolean drawImageFromPixelsOrRaster(Image img, int x, int y, ImageObserver observer);
+		public boolean hit(Rectangle rect, Shape s, boolean onStroke);
+		public boolean hitClip(int x, int y, int width, int height);
+		public Color getBackground();
+		public Color getColor();
+		public Composite getComposite();
+		public Context2D getContext2D();
+		public Font getFont();
+		public FontMetrics getFontMetrics();
+		public FontMetrics getFontMetrics(Font f);
+		public FontRenderContext getFontRenderContext();
+		public Graphics create(int x, int y, int width, int height);
+		public GraphicsConfiguration getDeviceConfiguration();
+		public HTML5Canvas getCanvas();
+		public int getHeight();
+		public int getWidth();
+		public int mark();
+		public Object clone();
+		public Object getRenderingHint(Key hintKey);
+		public Paint getPaint();
+		public Rectangle getClipBounds();
+		public Rectangle getClipBounds(Rectangle r);
+		public Rectangle getClipRect();
+		public RenderingHints getRenderingHints();
+		public Shape getClip();
+		public String debugStack();
+		public Stroke getStroke();
+		public void addRenderingHints(Map<?, ?> hints);
+		public void clearRect(int x, int y, int width, int height);
+		public void clip(Shape s);
+		public void clipRect(int x, int y, int width, int height);
+		public void copyArea(int x, int y, int width, int height, int dx, int dy);
+		public void dispose();
+		public void doStroke(boolean isBegin);
+		public void draw(Shape s);
+		public void draw3DRect(int x, int y, int width, int height, boolean raised);
+		public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle);
+		public void drawBytes(byte[] data, int offset, int length, int x, int y);
+		public void drawChars(char[] chars, int x, int y);
+		public void drawChars(char[] data, int offset, int length, int x, int y);
+		public void drawGlyphVector(GlyphVector gv, float x, float y);
+		public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y);
+		public void drawLine(int x0, int y0, int x1, int y1);
+		public void drawOval(int left, int top, int width, int height);
+		public void drawPolygon(int[] axPoints, int[] ayPoints, int nPoints);
+		public void drawPolygon(Polygon p);
+		public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints);
+		public void drawRect(int x, int y, int width, int height);
+		public void drawRenderableImage(RenderableImage img, AffineTransform xform);
+		public void drawRenderedImage(RenderedImage img, AffineTransform xform);
+		public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight);
+		public void drawString(AttributedCharacterIterator iterator, float x, float y);
+		public void drawString(AttributedCharacterIterator iterator, int x, int y);
+		public void drawString(String s, int x, int y);
+		public void drawString(String str, float x, float y);
+		public void drawText(char[] chars, Font font, float x, float y);
+		public void fill(Shape s);
+		public void fill3DRect(int x, int y, int width, int height, boolean raised);
+		public void fillArc(int centerX, int centerY, int width, int height, int startAngle, int arcAngle);
+		public void fillOval(int left, int top, int width, int height);
+		public void fillPolygon(int[] axPoints, int[] ayPoints, int nPoints);
+		public void fillPolygon(Polygon p);
+		public void fillRect(int x, int y, int width, int height);
+		public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight);
+		public void lineTo(int x2, int y2);
+		public void reset(int n0);
+		public void rotate(double radians);
+		public void rotate(double theta, double x, double y);
+		public void scale(double sx, double sy);
+		public void setAlpha(float f);
+		public void setAntialias(boolean tf);
+		public void setBackground(Color c);
+		public void setClip(int x, int y, int width, int height);
+		public void setClip(Shape clip);
+		public void setClipPriv(Shape clip);
+		public void setColor(Color c);
+		public void setComposite(Composite comp);
+		public void setFont(Font font);
+		public void setPaint(Paint paint);
+		public void setPaintMode();
+		public void setRenderingHint(Key hintKey, Object hintValue);
+		public void setRenderingHints(Map<?, ?> hints);
+		public void setStroke(Stroke s);
+		public void setStrokeBold(boolean tf);
+		public void setTransform(AffineTransform t);
+		public void setXORMode(Color c);
+		public void shear(double shx, double shy);
+		public void transform(AffineTransform t);
+		public void translate(double tx, double ty);
+		public void translate(int x, int y);
+		public void unclip(int n);
+
+		public void setComponent(JComponent c);
+		public int getID();
+	}
+	
+	static Stack<JSGraphicsInterface> gstack = new Stack<>();
+	
+	public static JSGraphicsInterface pushStack(JSGraphicsInterface g) {
+		System.out.println("Graphics2D pushed("+gstack.size()+") id=" + g.getID());
+		gstack.push(g);
+			return g;
+	}
+
+	public static JSGraphicsInterface peekStack() {
+		return (gstack.size() == 0 ? null : gstack.peek());
+	}
+	/**
+	 * @param mustBe
+	 * @return a peek at the next graphic on the stack
+	 */
+	public static JSGraphicsInterface popStack(JSGraphicsInterface mustBe, boolean allowError) {
+		String s;
+		if (gstack.size() == 0) {
+			s = "Graphics2D " + mustBe.getID() + " is not on the stack; the stack is empty!";
+			System.err.println(s);
+			if (allowError)
+				return null;
+			throw new RuntimeException(s);		
+		}
+		JSGraphicsInterface g = gstack.pop();
+		if (mustBe != g) {
+			 s = "Graphics2D " + g.getID() + " was not disposed! id found was " + g.getID();
+			System.err.println(s);
+			if (allowError)
+				return g;
+			throw new RuntimeException(s);
+		}
+		System.out.println("Graphics2D popped("+gstack.size()+") id=" + g.getID());
+		return g;
+	}
+
+	public static boolean isStackEmpty() {
+		return gstack.isEmpty();
+	}
+
+	public static int getStackDepth() {
+		return gstack.size();
+	}
+
+	public static Stack<JSGraphicsInterface> getStack() {
+		return gstack;
+	}
 
 //    private static final Insets GROOVE_INSETS = new Insets(2, 2, 2, 2);
 //    private static final Insets ETCHED_INSETS = new Insets(2, 2, 2, 2);
@@ -75,7 +255,6 @@ public class JSGraphicsUtils
 //        g.setColor(oldColor);
 //    }
 
-
 //    /**
 //     * Returns the amount of space taken up by a border drawn by
 //     * <code>drawEtchedRect()</code>
@@ -85,7 +264,6 @@ public class JSGraphicsUtils
 //    public static Insets getEtchedInsets() {
 //        return ETCHED_INSETS;
 //    }
-
 
 //    public static void drawGroove(Graphics g, int x, int y, int w, int h,
 //                                  Color shadow, Color highlight)
@@ -261,57 +439,54 @@ public class JSGraphicsUtils
 //        }
 //    }
 
-    public static Dimension getPreferredButtonSize(AbstractButton b, int textIconGap)
-    {
-        if(b.getComponentCount() > 0) {
-            return null;
-        }
+	public static Dimension getPreferredButtonSize(AbstractButton b, int textIconGap) {
+		if (b.getComponentCount() > 0) {
+			return null;
+		}
 
-        JSComponentUI ui = b.秘getUI();
-        ui.setTainted();
-        Icon icon = b.getIcon();
-        String text = b.getText();
-        if (ui.isAWT && text == "")
-        	text = "\u00A0"; // nonbreaking space for java.awt.Label
+		JSComponentUI ui = b.秘getUI();
+		ui.setTainted();
+		Icon icon = b.getIcon();
+		String text = b.getText();
+		if (ui.isAWT && text == "")
+			text = "\u00A0"; // nonbreaking space for java.awt.Label
 
-        Font font = ui.getFont();
-        if (font == null)
-        	return new Dimension(10,12);
-        
-        FontMetrics fm = b.getFontMetrics(font);
+		Font font = ui.getFont();
+		if (font == null)
+			return new Dimension(10, 12);
 
-        ui.setButtonRectangles(true);
+		FontMetrics fm = b.getFontMetrics(font);
 
-        SwingUtilities.layoutCompoundLabel(
-            b, fm, text, icon,
-            b.getVerticalAlignment(), b.getHorizontalAlignment(),
-            b.getVerticalTextPosition(), b.getHorizontalTextPosition(),
-            ui.viewR, ui.iconR, ui.textR, textIconGap);
+		ui.setButtonRectangles(true);
 
-        /* The preferred size of the button is the size of
-         * the text and icon rectangles plus the buttons insets.
-         */
+		SwingUtilities.layoutCompoundLabel(b, fm, text, icon, b.getVerticalAlignment(), b.getHorizontalAlignment(),
+				b.getVerticalTextPosition(), b.getHorizontalTextPosition(), ui.viewR, ui.iconR, ui.textR, textIconGap);
 
-        Rectangle r = ui.viewR;//SwingJS efficiency iconR.union(textR);
-        Insets insets = ui.insets;
-        
-        r.width += insets.left + insets.right;
-        r.height += insets.top + insets.bottom;
+		/*
+		 * The preferred size of the button is the size of the text and icon rectangles
+		 * plus the buttons insets.
+		 */
 
-        //System.out.println("JSGraphUtil " + b.getText() + " " + r);
-        return r.getSize();
-    }
+		Rectangle r = ui.viewR;// SwingJS efficiency iconR.union(textR);
+		Insets insets = ui.insets;
 
-    /*
-     * Convenience function for determining ComponentOrientation.  Helps us
-     * avoid having Munge directives throughout the code.
-     */
-    static boolean isLeftToRight( Component c ) {
-        return c.getComponentOrientation().isLeftToRight();
-    }
+		r.width += insets.left + insets.right;
+		r.height += insets.top + insets.bottom;
 
-    static boolean isMenuShortcutKeyDown(InputEvent event) {
-        return (event.getModifiers() &
-                Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) != 0;
-    }
+		// System.out.println("JSGraphUtil " + b.getText() + " " + r);
+		return r.getSize();
+	}
+
+	/*
+	 * Convenience function for determining ComponentOrientation. Helps us avoid
+	 * having Munge directives throughout the code.
+	 */
+	static boolean isLeftToRight(Component c) {
+		return c.getComponentOrientation().isLeftToRight();
+	}
+
+	static boolean isMenuShortcutKeyDown(InputEvent event) {
+		return (event.getModifiers() & Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()) != 0;
+	}
+
 }

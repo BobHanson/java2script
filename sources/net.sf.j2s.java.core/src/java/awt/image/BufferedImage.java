@@ -127,6 +127,8 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 	private static final int STATE_HAVE_PIXELS32 = 1 << 5; // int[]
 	private static final int STATE_HAVE_PIXELS = STATE_HAVE_PIXELS8 | STATE_HAVE_PIXELS32;
 
+	private static final int STATE_RASTER_CHECKED = 1 << 10; // BH 
+
 	private int 秘state = STATE_UNINITIALIZED;
 
 	private boolean 秘haveNewPixels;
@@ -172,6 +174,10 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		return ((秘state & STATE_RASTER) != 0);
 	}
 
+	public boolean 秘rasterChecked() {
+		return ((秘state & STATE_RASTER_CHECKED) != 0);
+	}
+		
 	public boolean 秘haveCanvas() {
 		return ((秘state & STATE_GRAPHICS) != 0);
 	}
@@ -918,6 +924,8 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 	}
 
 	void 秘ensureRasterUpToDate() {
+		if (秘rasterChecked())
+			return;
 		if (秘isRasterDirty(false) || !秘haveRaster() && 秘state != STATE_UNINITIALIZED) {
 			秘updateStateFromHTML5Canvas(0, false);
 			秘unsetGraphics();
@@ -1177,8 +1185,9 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 	 */
 	public void setRGB(int startX, int startY, int w, int h, int[] rgbArray, int offset, int scansize) {
 		boolean isStolen = 秘isRasterDirty(false);
-		if (isStolen && !秘haveRaster())
+		if (isStolen && !秘haveRaster() && !秘rasterChecked())
 			秘ensureRasterUpToDate();
+		秘state |= STATE_RASTER_CHECKED;		
 		if (!isStolen && (秘haveCanvas() || 秘state == STATE_IMAGENODE || 秘state == STATE_UNINITIALIZED)
 				&& 秘ensureCanGetRGBPixels()) {
 			int[] pixels = (int[]) 秘pix;
@@ -1200,6 +1209,7 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		}
 		秘unsetGraphics();
 		秘state |= STATE_RASTER;
+		秘state ^= STATE_RASTER_CHECKED;
 	}
 
 	/**
@@ -1377,7 +1387,7 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		 */
 
 		gCount++;
-		秘g.image = this;
+		秘g.setImage(this, gCount == 1);
 
 		秘state = STATE_GRAPHICS;
 
@@ -1417,7 +1427,7 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		if (setRasterState)
 			秘state |= STATE_RASTER;
 		while (gCount-- > 0)
-			秘g.dispose();
+			秘g = 秘g.pop();
 	}
 
 	private boolean 秘syncRaster() {

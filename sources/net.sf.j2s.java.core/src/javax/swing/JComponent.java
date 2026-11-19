@@ -626,6 +626,7 @@ public abstract class JComponent extends Container {
 		}
 	}
 
+	protected int 秘c0 = 0;
 	/**
 	 * Paints this component's children. If <code>shouldUseBuffer</code> is true,
 	 * no component ancestor has a buffer and the component children can use a
@@ -656,7 +657,6 @@ public abstract class JComponent extends Container {
 				}
 			}
 			Rectangle tmpRect = fetchRectangle();
-			Rectangle tmpRect2 = fetchRectangle();
 			// boolean checkSiblings = (!isOptimizedDrawingEnabled() &&
 			// checkIfChildObscuredBySibling());
 			// Rectangle clipBounds = null;
@@ -676,12 +676,8 @@ public abstract class JComponent extends Container {
 				// SwingJS TODO -- allow JSpecView-like layer for writing over buttons
 				if (jc != null && jc.isShowing()) {
 					jc.getBounds(tmpRect);
-					boolean isContentPane = jc.getRootPane().getContentPane() == jc;
-					Rectangle vr = (
-							//jc instanceof JTable ? jc.getVisibleRect() : 
-								tmpRect);
 					JSGraphics2D jsg = (JSGraphics2D) (Object) g.create(tmpRect.x, 
-							(isContentPane ? 0 : tmpRect.y), vr.width, vr.height); 
+							tmpRect.y - (秘isContentPane || 秘isMenuBar  ? 0 : 秘c0), tmpRect.width, tmpRect.height); 
 					jsg.setColor(jc.getForeground());
 					jsg.setFont(jc.getFont());
 					boolean shouldSetFlagBack = false;
@@ -730,7 +726,6 @@ public abstract class JComponent extends Container {
 				// }
 
 			}
-			recycleRectangle(tmpRect2);
 			recycleRectangle(tmpRect);
 		} 
 	}

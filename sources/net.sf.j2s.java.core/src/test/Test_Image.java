@@ -7,6 +7,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.color.ColorSpace;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
@@ -26,6 +28,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import sun.awt.image.PixelConverter;
 
@@ -38,7 +41,7 @@ import sun.awt.image.PixelConverter;
 public class Test_Image extends Test_ {
 
 	public static void main(String[] args) {
-		
+		j2sHeadless = false;		
 		System.err.println("TODO: testSource and testRead are not working!");
 		testPacked();  
 		testSource();
@@ -95,7 +98,8 @@ public class Test_Image extends Test_ {
 			System.out.println("image state after loading image is " + getImageState(img0));
 			assert(img0.getWidth() == 1250);
 			// invokeAndWait will work only in Java
-			SwingUtilities.invokeLater(new Runnable() {
+
+			Runnable r = new Runnable() {
 
 				@Override
 				public void run() {
@@ -164,14 +168,29 @@ public class Test_Image extends Test_ {
 					
 				}
 
-			});
+			};
+			Timer t = new Timer(10, new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					r.run();
+					/**
+					 * @j2sNative J2S._applets.master.__Info.readyFunction = null;
+					 */
+					
+				}});
+			t.setRepeats(false);
+			t.start();
+			
+			/**
+			 * @j2sNative J2S._applets.master.__Info.readyFunction = function(){}
+			 */
+//			SwingUtilities.invokeLater(r);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
 		}
-		
-		// TODO Auto-generated method stub
 		
 	}
 
@@ -246,6 +265,7 @@ public class Test_Image extends Test_ {
 		g.setColor(Color.green);
 		System.out.println(Integer.toHexString(g.getColor().getRGB()));
 		g.fillRect(25, 25, 50, 50);
+		g.dispose();
 		showImage(image);
 		if (!GraphicsEnvironment.isHeadless()) {
 			JFrame f = new JFrame();

@@ -548,8 +548,10 @@ public class JRootPane extends JComponent {
 			layeredPane.remove(menuBar);
 		menuBar = menu;
 
-		if (menuBar != null)
+		if (menuBar != null) {
+	        menuBar.秘isMenuBar = true;
 			layeredPane.add(menuBar, JLayeredPane.FRAME_CONTENT_LAYER);
+		}
 	}
 
 	/**
