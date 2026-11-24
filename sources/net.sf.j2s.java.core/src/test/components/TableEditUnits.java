@@ -3,12 +3,15 @@ package test.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -25,15 +28,24 @@ public class TableEditUnits extends JFrame {
     private DefaultTableModel model;
 
     public TableEditUnits() {
-    	JMenuBar m = new JMenuBar();
-    	m.add(new JLabel("test"));
-    	m.setBackground(Color.yellow);
-    	setJMenuBar(m);
-    	
         setTitle("Single-Click JTable with Unit Handling");
         setSize(520, 300);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
+
+        setBackground(Color.green);
+        getContentPane().setBackground(Color.magenta);
+        
+    	JMenuBar m = new JMenuBar() {
+    		public Dimension getPreferredSize() {
+    			Dimension d = super.getPreferredSize();
+    			d.height = 50;
+    			return d;
+    		}
+    	};
+    	m.add(new JLabel("osp"));
+    	m.setBackground(Color.yellow);
+    	setJMenuBar(m);
 
         // 1. Setup Columns & Data with Units
         String[] columns = {"Item", "Length", "Weight"};
