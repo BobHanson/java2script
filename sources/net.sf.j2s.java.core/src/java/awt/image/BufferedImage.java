@@ -1338,6 +1338,8 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 	 * Creates a <code>Graphics2D</code>, which can be used to draw into this
 	 * <code>BufferedImage</code>.
 	 * 
+	 * Same as getGraphics()
+	 * 
 	 * @return a <code>Graphics2D</code>, used for drawing into this image.
 	 */
 	public Graphics2D createGraphics() {
@@ -1387,7 +1389,7 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		 */
 
 		gCount++;
-		秘g.setImage(this, gCount == 1);
+		秘g.setImage(this);
 
 		秘state = STATE_GRAPHICS;
 
@@ -1427,7 +1429,7 @@ public class BufferedImage extends Image implements RenderedImage, Transparency,
 		if (setRasterState)
 			秘state |= STATE_RASTER;
 		while (gCount-- > 0)
-			秘g = 秘g.pop();
+			秘g.dispose();
 	}
 
 	private boolean 秘syncRaster() {
