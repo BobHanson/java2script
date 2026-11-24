@@ -1,5 +1,6 @@
 package swingjs.plaf;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Rectangle;
@@ -148,10 +149,10 @@ public class JSFrameUI extends JSWindowUI implements FramePeer, JSComponentUI.Em
 
 			addFocusHandler();
 		}
-		String strColor = toCSSString(c.getBackground());
-		DOMNode.setStyle(domNode, "background-color", strColor);
-		DOMNode.setStyle(frameNode, "background", strColor);
-		// Why did I set background to DDD? 2019-03-15 12:25:57 commit ca0130f819e926a987a1010569a2fcb5c36ced7c
+		
+		Color color = c.getBackground();
+		setBackgroundDOM(frameNode, jc);
+		setBackgroundColorDOM(domNode, color);
 		DOMNode.setStyle(frameNode, "color", toCSSString(c.getForeground()));
 		setInnerComponentBounds(width, height);
 		setTitle(frame.getTitle());
@@ -407,10 +408,6 @@ public class JSFrameUI extends JSWindowUI implements FramePeer, JSComponentUI.Em
 //		// do we need to subtract them? Add them?
 //		// is the width and height of a frame a measure of the internal contents pane?
 		bounds = new Rectangle(x, y, width, height);
-//		HTML5Canvas canvas = f.frameViewer.newCanvas();
-//		if (contentNode != null)
-//			DOMNode.remove(DOMNode.firstChild(contentNode));
-//		contentNode.appendChild(canvas);
 	}
 
 	@Override

@@ -410,7 +410,7 @@ public class JSEditorPaneUI extends JSTextUI implements KeyListener {
 			}
 		}
 		if (jc.isOpaque())
-			setBackgroundDOM(domNode, jc.getBackground());
+			setBackgroundColorDOM(domNode, jc.getBackground());
 		if (isHTML) {
 			if (currentHTML != null && html.equals(rawHTML))
 				return;

@@ -111,10 +111,11 @@ public class JSMenuBarUI extends JSPanelUI implements ContainerListener {
 	@Override
 	protected int getContainerHeight() {
 		Insets m = menuBar.getInsets();
-		height = getFont().getFontMetrics().getHeight() + m.top + m.bottom;
+		Dimension d = menuBar.getPreferredSize();
+		height = (d == null || d.height == 0 || d.height == Integer.MAX_VALUE ? getFont().getFontMetrics().getHeight() + m.top + m.bottom : d.height);
 		return height;
 	}
-
+	
 	@Override
 	public void setVisible(boolean b) {
 		super.setVisible(b);

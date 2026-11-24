@@ -2137,7 +2137,7 @@ public class JSComboBoxUI extends JSLightweightUI {
 		if (domNode == null || isUIDisabled)
 			return;
 		backgroundColor = color;
-		setBackgroundDOM(this.domNode, color);
+		setBackgroundColorDOM(this.domNode, color);
 	}
 
 }

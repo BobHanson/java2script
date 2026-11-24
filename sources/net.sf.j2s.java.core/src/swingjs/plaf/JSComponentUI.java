@@ -1318,6 +1318,7 @@ public class JSComponentUI extends ComponentUI
 		if (isUIDisabled)
 			return;
 		String prop = e.getPropertyName();
+		//System.out.println("JSCUI-propertyChange " + prop + " " + getClass().getName());
 		Object value = e.getNewValue();
 		if (prop == "jscanvas") {
 			addLocalCanvas(false);
@@ -2129,7 +2130,7 @@ public class JSComponentUI extends ComponentUI
 	 */
 	@Override
 	public void paint(Graphics g, JComponent c) {
-
+		//System.out.println("JSCUI-paint " + getClass().getName() + " " + c.getBounds());
 		setOverflow();
 		if (imageNode != null && !imagePersists) {
 			// the icon must paint itself; imageNode is just a placeholder
@@ -3748,11 +3749,18 @@ public class JSComponentUI extends ComponentUI
 			return;
 		// currently painting - update JSGraphics2D
 		backgroundColor = color;
-		if ((jc.秘paintsSelf() || (isContentPane || isLayeredPane)
-				&& jc.秘setPaintsSelf(JSComponent.PAINTS_SELF_YES) == JSComponent.PAINTS_SELF_YES) && jc.isOpaque()) {
+		if (jc.秘needsClearPaintPath())
 			clearPaintPath();
+		
+		if (jc.秘gstate == null) {
+			paintBackground(null);
+		} else {
+			// we are in a paint right now and are doing background borders and such
+			// note that this may produce a flash of color if a root panel has a color
+			// but is actually complete concealed by additional opaque elements. 
+			paintBackground(jc.秘gstate.create());
+			jc.秘gstate.dispose();
 		}
-		paintBackground(jc.秘gtemp);
 	}
 
 	/**
@@ -3775,23 +3783,32 @@ public class JSComponentUI extends ComponentUI
 			DOMNode.setStyle(domNode, "background", "transparent");
 	}
 
-	public void paintBackground(JSGraphics2D g) {
+	protected void paintBackground(JSGraphics2D g) {
+		paintBackgroundCheck(g, false);
+	}
+
+	/**
+	 * 
+	 * @param g
+	 * @param justChecking true to just see if graphics would be used
+	 * @return true not justChecking or if checking and graphics would be used 
+	 */
+	public boolean paintBackgroundCheck(JSGraphics2D g, boolean justChecking) {
 		Color color = (this.backgroundColor == null ? getBackground() : this.backgroundColor);
 		if (color == null)
-			return;
+			return false;
 		boolean isOpaque = c.isOpaque();
 		boolean paintsSelf = jc.秘paintsSelf();
 		// System.out.println("paintback " + this.id + " " + (/** @j2sNative
 		// this.jc.text||*/"")+ " " + isOpaque + " " + paintsSelf + " " + g);
 		if (g == null) {
 			if (!paintsSelf)
-				setBackgroundDOM(domNode, color);
+				setBackgroundColorDOM(domNode, color);
 			// preliminary -- DOM only, when the background is set
-		} else if (allowPaintedBackground && (isOpaque && (isPanel 
-				|| isLabel && paintsSelf // overridden paintComponent 
-				|| cellComponent != null 
-				|| jc.getComponentCount() > 0) 
-				|| jc.秘g != null)) {
+		} else if (allowPaintedBackground && (isOpaque && (isPanel || isLabel && paintsSelf // overridden paintComponent
+				|| cellComponent != null || jc.getComponentCount() > 0) || jc.秘g != null)) {
+			if (justChecking)
+				return true;
 			// all opaque components must paint their background
 			// just in case they have painted CHILDREN or if they are table cell components
 			if (isOpaque == (color.getAlpha() == 255)) {
@@ -3808,14 +3825,22 @@ public class JSComponentUI extends ComponentUI
 					((JSComponentUI) c.ui).setTransparent();
 				}
 			}
-		}
+		} 
+		if (justChecking)
+			return false;
 		if (allowPaintedBackground && !isOpaque)
 			setTransparent();
 		else
 			checkTransparent();
+		return true;
 	}
 
-	protected void setBackgroundDOM(DOMNode node, Color color) {
+	public void setBackgroundDOM(DOMNode domNode, JComponent jc) {
+		Color color = (jc.isOpaque() ? jc.getBackground() : null);
+		DOMNode.setStyle(domNode,  "background", (color == null ? "transparent" : toCSSString(color)));				
+	}
+
+	protected void setBackgroundColorDOM(DOMNode node, Color color) {
 		DOMNode.setStyle(node, "background-color",
 				color == null ? null : toCSSString(color));
 	}
