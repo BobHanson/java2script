@@ -1,5 +1,6 @@
 package test;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -57,8 +58,12 @@ public class Test_Menu extends JFrame {
 
 			setJMenuBar(getMenuBar());
 
+			setBackground(null);
+			
 			JPanel p = new JPanel();
 			p.setPreferredSize(new Dimension(300,400));
+			p.setBackground(Color.white);
+			
 			add(p);
 			addPopupMenu(this);
 			pack();
@@ -69,7 +74,6 @@ public class Test_Menu extends JFrame {
 		    Point p0 = SwingUtilities.convertPoint(p, 0, 0, getLayeredPane());
 		    System.out.println(p0);
 
-			
 		}
 
 

@@ -35,19 +35,30 @@ import sun.awt.image.PixelConverter;
 /**
  * Check for fields initialization timing.
  * 
+ * Note that testRead() uses a Timer in order for the image that has been read to be available.
+ * 
+ * Headless automatic shutdown is disabled by defining applet.__Info.readyFunction to be not null.
+ * 
  * @author RM
  *
  */
 public class Test_Image extends Test_ {
+	
+	private static void setHeadlessShutdown(boolean enabled) {
+		
+		/**
+		 * @j2sNative 
+		 * 
+		 *  J2S._applets.master.__Info.readyFunction = (enabled ? null : function(){});
+		 */
+	}
 
 	public static void main(String[] args) {
-		j2sHeadless = false;		
-		System.err.println("TODO: testSource and testRead are not working!");
 		testPacked();  
 		testSource();
 		testGray();
 		testRead();
-		testWrite();
+		testWrite();// not implemented
 
 //		System.out.println("Test_Image OK");
 	}
@@ -169,24 +180,16 @@ public class Test_Image extends Test_ {
 				}
 
 			};
+			setHeadlessShutdown(false);
 			Timer t = new Timer(10, new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					r.run();
-					/**
-					 * @j2sNative J2S._applets.master.__Info.readyFunction = null;
-					 */
-					
+					setHeadlessShutdown(true);
 				}});
 			t.setRepeats(false);
 			t.start();
-			
-			/**
-			 * @j2sNative J2S._applets.master.__Info.readyFunction = function(){}
-			 */
-//			SwingUtilities.invokeLater(r);
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 			assert(false);
