@@ -191,11 +191,11 @@ public class JSSliderUI extends JSLightweightUI implements PropertyChangeListene
 
 		}
 		if (!isScrollBar)
-			setBackgroundDOM(outerNode, jc.isOpaque() && !slider.秘paintsSelf() ? getBackground() : null);
+			setBackgroundColorDOM(outerNode, jc.isOpaque() && !slider.秘paintsSelf() ? getBackground() : null);
 	}	
 	
 	@Override
-	public void paintBackground(JSGraphics2D g) {
+	protected void paintBackground(JSGraphics2D g) {
 		if (!isScrollBar)
 			super.paintBackground(g);
 	}
@@ -1146,7 +1146,7 @@ public class JSSliderUI extends JSLightweightUI implements PropertyChangeListene
 
 	public void clearPaintPath() {
 		if (!isScrollBar)
-			setBackgroundDOM(outerNode, null);
+			setBackgroundColorDOM(outerNode, null);
 		super.clearPaintPath();
 	}
 

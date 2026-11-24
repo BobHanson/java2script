@@ -196,9 +196,12 @@ public class Resizer {
 	 */
   void setFrameDimensions(Rectangle r) {
 		if (jframe == null) {
-			rootPane.getGraphics().setColor(Color.WHITE);
-			rootPane.getGraphics().fillRect(0, 0, r.width, r.height);
-			((JApplet) rootPane.getParent()).resizeHTML(r.width, r.height);
+			JApplet applet = (JApplet) rootPane.getParent();
+			applet.resizeHTML(r.width, r.height);
+			applet.setPreferredSize(new Dimension(r.width, r.height));
+			applet.invalidateTree();
+			applet.repackContainer();
+			applet.repaint();
 		} else {
 			jframe.setPreferredSize(new Dimension(r.width, r.height));
 			jframe.invalidateTree();

@@ -1,17 +1,20 @@
 package swingjs.plaf;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Window;
 
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JRootPane;
 
 import swingjs.api.js.DOMNode;
 
 public class JSRootPaneUI extends JSLightweightUI {
 
 	Resizer resizer;
+	private boolean isApplet;
 	
 	void setResizer(Resizer resizer) {
 		this.resizer = resizer;
@@ -28,7 +31,8 @@ public class JSRootPaneUI extends JSLightweightUI {
 			domNode = newDOMObject("div", id);
 			addFocusHandler();
 			//allowPaintedBackground = !jc.isOpaque();
-			DOMNode.setStyle(domNode,  "background", (jc.isOpaque() ? toCSSString(jc.getBackground()) : "transparent"));				
+			super.setBackgroundDOM(domNode, jc);
+			isApplet = ((JRootPane) jc).getFrameViewer().isApplet;
 		}
 		checkAllowDivOverflow();
 		return domNode;
@@ -38,6 +42,10 @@ public class JSRootPaneUI extends JSLightweightUI {
 	public void installUI(JComponent jc) {
 	}
 
+	@Override
+	public boolean isConnected() {
+		return isApplet || DOMNode.isConnected(domNode);
+	}
 
 	@Override
 	public void uninstallUI(JComponent jc) {
