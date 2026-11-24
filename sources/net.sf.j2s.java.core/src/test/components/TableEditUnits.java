@@ -56,7 +56,13 @@ public class TableEditUnits extends JFrame {
         };
 
         model = new DefaultTableModel(data, columns);
-        table = new JTable(model);
+        table = new JTable(model) {
+        	public void paintComponent(Graphics g) {
+        		super.paintComponent(g);
+        		
+        	}
+        };
+        table.setBackground(Color.pink);
         table.setRowHeight(28);
         table.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
 
