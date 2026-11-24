@@ -519,6 +519,11 @@ if (node)for (var i = 0, n = av.length; i < n;) {
 				
 			}
 
+			public static int getMark(Context2D ctx) {
+				 Object[][] o = getSavedStack(ctx);
+				 return (o == null ? 0 : o.length);
+			}
+
 			@SuppressWarnings("null")
 			public static double[] setMatrix(Context2D ctx, AffineTransform transform) {
 				double[] m = /**  @j2sNative ctx._m || */ null;
@@ -548,6 +553,13 @@ if (node)for (var i = 0, n = av.length; i < n;) {
 				}
 
 			abstract public void drawImage(DOMNode domNode, int x, int y);
+
+			public static Object[][] copySavedStack(Context2D ctx) {
+				Object[][]stack = getSavedStack(ctx);
+				Object[][] copy = new Object[stack.length][];
+				System.arraycopy((Object[]) stack, 0, copy, 0, stack.length);
+				return copy;
+			}
 
 		}
 

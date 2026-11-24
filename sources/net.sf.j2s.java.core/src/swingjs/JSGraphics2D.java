@@ -10,6 +10,7 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.GraphicsConfiguration;
 import java.awt.Image;
+import java.awt.JSComponent;
 import java.awt.Paint;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -57,7 +58,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		// Graphics2D,
 		Cloneable {
 
-	static boolean debugClip = JSUtil.J2S.debugClip();
+	public static boolean  debugClip = JSUtil.J2S.debugClip();
 
 	private static final int DRAW_NOCLOSE = 0;
 	private static final int DRAW_CLOSE = 1;
@@ -100,19 +101,27 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 
 	public BufferedImage image;
 
+	@SuppressWarnings("unused")
+	private JSComponent window;
+
 	private static RenderingHints aa;
 
 	// private Color currentColor;
 
 	private static float pixelRatio = /**
-										 * @j2sNative (function () { var ctx =
-										 *            document.createElement("canvas").getContext("2d"), dpr =
-										 *            window.devicePixelRatio || 1, bsr =
-										 *            ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio
-										 *            || ctx.msBackingStorePixelRatio || ctx.oBackingStorePixelRatio ||
-										 *            ctx.backingStorePixelRatio || 1; return dpr / bsr; })() ||
+										 * @j2sNative (function () { 
+										 * 
+										 * var ctx = document.createElement("canvas").getContext("2d"), 
+										 *    dpr = window.devicePixelRatio || 1, 
+										 *    bsr = ctx.webkitBackingStorePixelRatio 
+										 *            || ctx.mozBackingStorePixelRatio
+										 *            || ctx.msBackingStorePixelRatio 
+										 *            || ctx.oBackingStorePixelRatio 
+										 *            || ctx.backingStorePixelRatio 
+										 *            || 1; 
+										 *   return dpr / bsr; })() ||
 										 */
-			1;
+									1;
 	static {
 		System.out.println("JSGraphics2D pixelRatio is " + pixelRatio);
 	}
@@ -125,7 +134,6 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 	public JSGraphics2D(Object canvas) { // this must be Object, because we are
 											// passing an actual HTML5 canvas
 		this.id = ++idCount;
-		JSGraphicsUtils.pushStack(this);
 		this.canvas = (HTML5Canvas) canvas;
 		ctx = this.canvas.getContext("2d");
 		setStroke(new BasicStroke());
@@ -142,9 +150,25 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		clipPriv(0, 0, width, height);
 	}
 
+	/**
+	 * not implemented?
+	 * 
+	 * @param canvas
+	 * @param image
+	 */
 	public JSGraphics2D(HTML5Canvas canvas, BufferedImage image) {
 		this(canvas);
 		this.image = image;
+	}
+
+	/**
+	 * This canvas is a root pane canvas
+	 * @param c
+	 * @param canvas
+	 */
+	public JSGraphics2D(JSComponent window, HTML5Canvas canvas) {
+		this(canvas);
+		this.window = window;
 	}
 
 	@Override public void setAntialias(boolean tf) {
@@ -941,7 +965,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 
 	
 	@Override public void setClip(int x, int y, int width, int height) {
-		if (currentClip != null)// && !currentClip.contains(x, y, width, height))
+		if (currentClip != null)
 			unclip(Integer.MIN_VALUE);
 		clipPriv(x,y, width, height);
 	}
@@ -1272,6 +1296,10 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 	private final static int SAVE_CLIP = 5;
 	private final static int SAVE_MAX = 7;
 
+	public int getMark() {
+		return Context2D.getMark(ctx);	
+	}
+
 	/**
 	 * creates a save object to extend the capabilities of context2d.save() that
 	 * brings that into line with Java's graphics2d .create()
@@ -1282,14 +1310,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 	 * @return the length of the ctx._aSaved array after the push
 	 */
 	@Override public int mark() {
-		return mark(false);
-	}
-
-	private int mark(boolean isClone) {
 		// note: This method is referred to in JComponent.java j2snative block as mark$
-		if (debugClip) {
-			System.out.println("save " + transform);
-		}
 		ctx.save();
 		Object[] map = /** @j2sNative [] || */new Object[SAVE_MAX];
 		map[SAVE_ALPHA] = (/** @j2sNative 1 ? this.ctx.globalAlpha : */0);//Float.valueOf(ctx.globalAlpha);
@@ -1298,12 +1319,19 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		map[SAVE_TRANSFORM] = transform.秘toArray();
 		map[SAVE_FONT] = font;
 		map[SAVE_CLIP] = currentClip;
-		return Context2D.push(ctx, map);
+		int mark = Context2D.push(ctx, map);
+		if (debugClip) {
+			System.err.println("mark save " + mark + " " + transform);
+		}
+		return mark;
 	}
 
 	
 	@Override public String debugStack() {
-		Object[][] stack = Context2D.getSavedStack(ctx);
+		return showState(Context2D.getSavedStack(ctx));
+	}
+	
+	public static String showState(Object[][] stack) {
 		String s = "";
 		for (int i = 0; i < stack.length; i++) {
 			Object[] map = stack[i];
@@ -1312,7 +1340,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		return s;
 	}
 	
-	private boolean unclipped = false;
+	private boolean unclipping = false;
 
 	/**
 	 * 
@@ -1332,8 +1360,8 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		}
 
 		Object[][] stack = Context2D.getSavedStack(ctx);
-		unclipped = (n < 0);
-		if (unclipped)
+		unclipping = (n < 0);
+		if (unclipping)
 			n = -n;
 		if (n > stack.length)
 			n = stack.length;
@@ -1342,10 +1370,11 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 //			if (isBefore)
 //				setClipPriv((Shape) stack[stack.length - 1 - i][SAVE_CLIP]);
 		}
+		
 		currentClip = null;
 		for (int i = n; --i >= 0;) {
 			setState(stack[stack.length - 1 - i]);
-			if (!unclipped)
+			if (!unclipping)
 				setClipPriv((Shape) stack[stack.length - 1 - i][SAVE_CLIP]);
 			ctx.save();
 		}
@@ -1360,7 +1389,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		if (n0 < 1)
 			n0 = 1;
 		int n;
-		if (unclipped) {
+		if (unclipping) {
 			unclip(Integer.MAX_VALUE);
 		}
 		while ((n = Context2D.getSavedLevel(ctx)) >= n0) {
@@ -1402,7 +1431,7 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 
 	@Override
 	public Object clone() {
-		int n = mark(false);
+		int n = mark();
 		if (debugClip) {
 			System.out.println("clone to " + n);
 		}
@@ -1421,9 +1450,28 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		if (hints != null) {
 			g.hints = (RenderingHints) hints.clone();
 		}
+		/*
+		 * FontInfos are re-used, so must be cloned too, if they are valid, and be
+		 * nulled out if invalid. The implied trade-off is that there is more to be
+		 * gained from re-using these objects than is lost by having to clone them when
+		 * the SG2D is cloned.
+		 */
+		// if (this.fontInfo != null) {
+		// if (this.validFontInfo) {
+		// g.fontInfo = (FontInfo)this.fontInfo.clone();
+		// } else {
+		// g.fontInfo = null;
+		// }
+		// }
+		// if (this.glyphVectorFontInfo != null) {
+		// g.glyphVectorFontInfo =
+		// (FontInfo)this.glyphVectorFontInfo.clone();
+		// g.glyphVectorFRC = this.glyphVectorFRC;
+		// }
+		// g.invalidatePipe();
 		g.setStroke((BasicStroke) currentStroke.clone());
 		g.initialState = n;
-		return JSGraphicsUtils.pushStack(g);
+		return (g);
 	}
 
 	public JComponent jc;
@@ -1436,10 +1484,6 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		return id;
 	}
 	
-	@Override public void setComponent(JComponent c) {
-		jc = c;
-	}
-	
 	@Override public int getWidth() {
 		return width;
 	}
@@ -1448,61 +1492,96 @@ public class JSGraphics2D implements JSGraphicsUtils.JSGraphicsInterface,
 		return height;
 	}
 
-	@Override public void dispose() {
-		pop();
+	@Override public void setComponent(JComponent c) {
+		jc = c;
+	}
+	
+	public void setImage(BufferedImage bufferedImage) {
+		image = bufferedImage;
 	}
 
-	boolean isDisposed = false;
-	
-	/**
-	 * This can be done as many times as necessary to clear the clip.
-	 * The first time through does the pop and removes the image.
-	 * 
-	 * @return the next graphic on the stack, in case that is of interest.
-	 */
-	public JSGraphics2D pop() {
-		JSGraphics2D g = this;
-		if (!isDisposed) {
-			g = popStack();
-			isDisposed = true;
-		}
+	@Override public void dispose() {
 		if (debugClip) {
-			System.out.println("dispose to " + initialState);
+			System.err.println("dispose to " + initialState);
 		}
 		reset(initialState);
 		if (image != null) {
 			image.秘graphicsDisposed();
 			image = null;
 		}
-		return g;
 	}
 
 	/**
-	 * Pop my image off the stack or thrown a RuntimeException if there is no image
-	 * and I am not on the top of the stack.
+	 * A class to maintain a previous CTX state and return to it.
+	 * 
+	 * @author hanso
+	 *
 	 */
-	private JSGraphics2D popStack() {
-		JSGraphics2D g = (JSGraphics2D) JSGraphicsUtils.peekStack();
-		if (g == this // ok
-				|| image == null // an error
-		) {
-			JSGraphicsUtils.popStack(this, false);
+	public static class JSGraphicsState {
+
+		/**
+		 * At the time the component was last painted
+		 */
+		private Object[][] componentPaintStack;
+		
+		/**
+		 * at the time of this.create(); to be restored upon this.dispose()
+		 */
+		private Object[][] savedCTXStack;
+		public JSGraphics2D g;
+		JSComponent jc;
+		
+		public static JSGraphicsState getState(JSComponent jc, JSGraphics2D g) {
+			return new JSGraphicsState(jc, g);		
 		}
-		return (g == null ? this : g);
+		
+		private JSGraphicsState(JSComponent jc, JSGraphics2D g) {
+			this.jc = jc;
+			this.g = g;
+			componentPaintStack = Context2D.copySavedStack(g.ctx);
+		}
+
+		public JSGraphics2D create() {			
+			savedCTXStack = Context2D.copySavedStack(g.ctx);
+			g.gotoState(componentPaintStack, -1);
+			return g;
+		}
+
+		public void dispose() {
+			g.gotoState(savedCTXStack, -1);
+		}
+
 	}
 
-	/** Image graphics can persist */
-	public void setImage(BufferedImage img) {
-		image = img;
-		isDisposed = false;
-		popStack();
+	public static JSGraphics2D get(Graphics g) {
+		return (JSGraphics2D) (Object) g;
 	}
 
-	public void setImage(BufferedImage img, boolean andPop) {
-		image = img;
-		isDisposed = false;
-		if (andPop)
-			popStack();
+	public void gotoState(Object[][] stack, int i0) {
+		// 1. Fully restore the ctx if i0 < 0.
+		boolean isFull = (i0 < 0);
+		if (isFull) {
+			i0 = 0;
+			unclipping = false;
+			while (Context2D.getSavedLevel(ctx) >= 0) {
+				setState(Context2D.pop(ctx));
+				ctx.restore();
+			}
+		}
+		// 2. Fully implement the stack in a forward direction.
+		//    If this is after a restore that unclips, then 
+		//    the whole idea is to restore just the location, not the clip.
+		if (stack != null) {
+			for (int i = i0, n = stack.length; i < n; i++) {
+				setState(stack[i]);
+				if (!unclipping) 
+					setClipPriv((Shape) stack[i][SAVE_CLIP]);
+				if (isFull)
+					mark();
+				else
+					ctx.save();
+			}
+		}
 	}
 
 }

@@ -180,9 +180,8 @@ public class JSGraphicsUtils {
 	static Stack<JSGraphicsInterface> gstack = new Stack<>();
 	
 	public static JSGraphicsInterface pushStack(JSGraphicsInterface g) {
-		System.out.println("Graphics2D pushed("+gstack.size()+") id=" + g.getID());
-		gstack.push(g);
-			return g;
+	//	System.out.println("Graphics2D pushed("+gstack.size()+") id=" + g.getID());
+		return gstack.push(g);
 	}
 
 	public static JSGraphicsInterface peekStack() {
@@ -197,20 +196,19 @@ public class JSGraphicsUtils {
 		if (gstack.size() == 0) {
 			s = "Graphics2D " + mustBe.getID() + " is not on the stack; the stack is empty!";
 			System.err.println(s);
-			if (allowError)
-				return null;
-			throw new RuntimeException(s);		
+			if (!allowError)
+				throw new RuntimeException(s);		
+			return null;
 		}
-		JSGraphicsInterface g = gstack.pop();
-		if (mustBe != g) {
+		JSGraphicsInterface g = gstack.peek();
+		if (g != mustBe) {
 			 s = "Graphics2D " + g.getID() + " was not disposed! id found was " + g.getID();
 			System.err.println(s);
-			if (allowError)
-				return g;
-			throw new RuntimeException(s);
+			if (!allowError)
+				throw new RuntimeException(s);
 		}
-		System.out.println("Graphics2D popped("+gstack.size()+") id=" + g.getID());
-		return g;
+//		System.out.println("Graphics2D popped("+gstack.size()+") id=" + g.getID());
+		return gstack.pop();
 	}
 
 	public static boolean isStackEmpty() {
