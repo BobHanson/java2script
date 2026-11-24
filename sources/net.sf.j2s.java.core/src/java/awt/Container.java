@@ -1289,8 +1289,7 @@ public class Container extends JSComponent {
      * @see #add
      * @see #remove
      */
-    @Override
-	public void removeAll() { 
+ 	public void removeAll() { 
         synchronized (getTreeLock()) {
             adjustListeningChildren(AWTEvent.HIERARCHY_EVENT_MASK,
                                     -listeningChildren);
@@ -1327,7 +1326,6 @@ public class Container extends JSComponent {
             }
             invalidateIfValid();
         }
-        super.removeAll();
     }
 
     // Should only be called while holding tree lock

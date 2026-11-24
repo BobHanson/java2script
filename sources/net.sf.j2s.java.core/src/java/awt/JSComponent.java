@@ -53,6 +53,7 @@ import javax.swing.plaf.UIResource;
 import swingjs.JSAppletViewer;
 import swingjs.JSFrameViewer;
 import swingjs.JSGraphics2D;
+import swingjs.JSGraphics2D.JSGraphicsState;
 import swingjs.JSKeyEvent;
 import swingjs.JSMouse;
 import swingjs.JSToolkit;
@@ -122,7 +123,7 @@ public abstract class JSComponent extends Component {
 	private static int 秘incr;
 	private Insets 秘tempInsets;
 	public JSGraphics2D 秘g;
-	public JSGraphics2D 秘gtemp; // indicates that we are painting, so that g.setBackground() should also be set 
+	public JSGraphicsState 秘gstate; // indicates that we are painting, so that g.setBackground() should also be set 
 
 	public boolean 秘isRootPane, 秘isContentPane, 秘isLayeredPane, 秘isMenuBar;
 	// initially, we go with the current thread, but later we will pick up the actual JSAppletViewer
@@ -140,6 +141,11 @@ public abstract class JSComponent extends Component {
 	Boolean 秘peerVis;
 
 	protected AbstractBorder 秘border; // from private JComponent field; was Border
+
+	/**
+	 * Specifically for children of the layered pane; set there.
+	 */
+	public int 秘paintOffsetY = 0;
 
     public final static int PAINTS_SELF_NO = -1;
     public final static int PAINTS_SELF_YES = 1;
@@ -249,8 +255,11 @@ public abstract class JSComponent extends Component {
 	 */
 	@Override
 	public Graphics getGraphics() {
-		if (!秘winOrApplet && (width == 0 || height == 0 || !isVisible()))
+		if (!秘winOrApplet && (width == 0 || height == 0 || !isVisible())) {
+			// width could be small, such as 4x4 (Tracker TFrame)	
+			// 
 			return null;
+		}
 		Graphics g;
 		// this was 秘frameViewer != null, but that
 		// fails for paintImmediately, because all components
@@ -259,10 +268,10 @@ public abstract class JSComponent extends Component {
 		// ContentPane adds its insets. parent == null is a 
 		// proxy for Applet or Window since only they can be
 		// here and not have a parent.
-		if (秘isRootPane || 秘winOrApplet || 秘isContentPane) {
+		if (秘isRootPane || 秘winOrApplet || 秘isLayeredPane) {
 			// this next call adds the necessary transform.
 			g = 秘frameViewer.getGraphics().create();
-			if (秘isContentPane) {
+			if (秘isLayeredPane) {
 				if (秘tempInsets == null)
 					秘tempInsets = new Insets(0,0,0,0);
 				((JComponent) this).getRootPane().getInsets(秘tempInsets);
@@ -288,7 +297,7 @@ public abstract class JSComponent extends Component {
 			((JSComponentUI) ui).clearPaintPath();
 		}
 		
-		g.translate(x, (秘isContentPane ? 0 : y));
+		g.translate(x, y);
 		g.clipRect(0, 0, width, height); // BH changed 2018.12.05 was setClip
 		// }
 		g.setFont(getFont());
@@ -373,7 +382,7 @@ public abstract class JSComponent extends Component {
 		if (getOrCreatePeer() == null)
 			秘peerVis = (isVisible ? Boolean.TRUE : Boolean.FALSE);
 		else
-			updatePeerVisibilityOrig(isVisible);
+			super.updatePeerVisibility(isVisible);
 	}
 
 	/**
@@ -524,20 +533,20 @@ public abstract class JSComponent extends Component {
      *  
      * @param g
      */
-	public void 秘paintWithBackgroundCheck(Graphics g) {
+	public void 秘paintNowWithBackgroundCheck(Graphics g) {
 		JSGraphics2D jcg = 秘getJSGraphic2D(g);
-		秘checkBackgroundPainted(jcg, true);
+		秘getGraphicsState(jcg, true);
 		paint(g);
-		秘checkBackgroundPainted(jcg, false);
+		秘getGraphicsState(jcg, false);
 	}
 
-	public void 秘paintContainerBackgroundCheck(Graphics g) {
-		JSGraphics2D jcg = 秘getJSGraphic2D(g);
-		秘checkBackgroundPainted(jcg, true);
-		((Container) this).paintContainer(g);
-		秘checkBackgroundPainted(jcg, false);
-	}
-
+//	public void 秘paintContainerBackgroundCheck(Graphics g) {
+//		JSGraphics2D jcg = 秘getJSGraphic2D(g);
+//		秘checkBackgroundPainted(jcg, true);
+//		((Container) this).paintContainer(g);
+//		秘checkBackgroundPainted(jcg, false);
+//	}
+//
 	@Override
 	public void addKeyListener(KeyListener l) {
 		super.addKeyListener(l);
@@ -628,22 +637,23 @@ public abstract class JSComponent extends Component {
 	 *
 	 * @param jsg
 	 */
-	public void 秘checkBackgroundPainted(JSGraphics2D jsg, boolean init) {
-		if (jsg == null || init) {
-//			秘isBackgroundPainted = false;
-			秘gtemp = jsg;
-			((JSComponentUI) ui).paintBackground(jsg);
+	public void 秘getGraphicsState(JSGraphics2D jsg, boolean isInit) {
+		秘gstate = null;
+		if (!isInit)
 			return;
+		boolean usesGraphics = (((JSComponentUI) ui).paintBackgroundCheck(jsg, true));
+		if (usesGraphics) {
+			// don't delete -- used in paint immediately applications
+			((JSComponentUI) ui).paintBackgroundCheck(jsg, false);
+			秘gstate = JSGraphics2D.JSGraphicsState.getState(this, jsg);
 		}
-		秘gtemp = null;
-//		秘isBackgroundPainted = 秘alwaysPaint || jsg.isBackgroundPainted();
-//		if (秘isBackgroundPainted) {
-//			((JSComponentUI) ui).setPainted(jsg);
-//			// It's all one canvas, and it is behind the root pane (bad design?)
-//			// so if it is painted, we should make the root pane transparent
-//			((JSComponentUI) ((JComponent) this).getRootPane().getUI()).setPainted(jsg);
-//		}
 	}
+
+	public boolean 秘needsClearPaintPath() {
+		return (isOpaque() && 秘paintsSelf() || (秘isContentPane || 秘isLayeredPane)
+				&& 秘setPaintsSelf(JSComponent.PAINTS_SELF_YES) == JSComponent.PAINTS_SELF_YES);
+	}
+
 
     public int 秘setPaintsSelf(int flag) {
     	flag = (秘iPaintMyself == PAINTS_SELF_ALWAYS ? PAINTS_SELF_ALWAYS : (秘iPaintMyself = flag));
@@ -710,11 +720,6 @@ public abstract class JSComponent extends Component {
 
 	public boolean 秘selfOrChildIsPainted() {
 		return 秘paintsSelf(); 
-	}
-
-	public void removeAll() {
-		秘setPaintsSelf(PAINTS_SELF_UNKNOWN);
-	    ((JComponent) this).paintImmediately(0,  0,  width,  height);
 	}
 
 	@Override
@@ -789,12 +794,13 @@ public abstract class JSComponent extends Component {
 	public JComponent 秘transferFrameTo(JComponent jc) {
 		if (jc.秘frameViewer == 秘frameViewer)
 			return jc;
-		if (jc.getUIClassID() == "AppletUI") {
+		if (jc instanceof RootPaneContainer) {
+			// transferring an applet to a frame. 
+			// so instead we transfer the applet's contentPane
 			System.out.println("JSComponent setContentPane to applet; using content.contentPane instead");
 			// applet or frame or window of some sort
 			// take just the content pane
 			jc = (JComponent) jc.getRootPane().getContentPane();
-			jc.秘isContentPane = false;
 			jc.getRootPane().setContentPane(new JPanel());
 		}
 		jc.秘frameViewer = 秘frameViewer;
@@ -937,7 +943,11 @@ public abstract class JSComponent extends Component {
 
 	@Override
 	public boolean isShowing() {
-		return 秘getUI().isConnected() && isRecursivelyVisible();
+		return 秘isConnected() && isRecursivelyVisible();
+	}
+
+	public boolean 秘isConnected() {
+		return 秘getUI().isConnected();
 	}
 
 }
