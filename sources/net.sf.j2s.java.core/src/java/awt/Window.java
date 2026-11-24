@@ -49,6 +49,7 @@ import javax.swing.JComponent;
 import javax.swing.JLayeredPane;
 import javax.swing.JRootPane;
 import javax.swing.RootPaneContainer;
+
 import sun.awt.AppContext;
 import swingjs.JSToolkit;
 import swingjs.plaf.JSComponentUI;
@@ -255,7 +256,17 @@ public class Window extends JComponent {
 
 	static boolean systemSyncLWRequests = false;
 	boolean syncLWRequests = false;
-	transient boolean beforeFirstShow = true;
+	protected transient boolean beforeFirstShow = true;
+
+	/**
+	 * Frames will be connected, but Java "peer" is not established until a frame is actually connected
+	 * and visible
+	 */
+	@Override
+	public boolean 秘isConnected() {
+		// for JFrame, it will be connected, but in Java would have no peer until visible
+		return visible && !beforeFirstShow && 秘getUI().isConnected();
+	}
 
 	static final int OPENED = 0x01;
 
