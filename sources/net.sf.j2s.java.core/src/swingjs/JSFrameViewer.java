@@ -1,5 +1,6 @@
 package swingjs;
 
+import java.applet.JSApplet;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Graphics;
@@ -135,6 +136,8 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 	@Override
 	public void setDisplay(HTML5Canvas canvas) {
 		this.canvas = canvas;
+		if (applet != null)
+			applet.秘canvas = canvas;
 		jsgraphics = null;
 	}
 
@@ -143,6 +146,10 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 		setGraphics((Graphics) (Object) (jsgraphics = null), width, height, top);
 		if (top != null)
 			((JSComponent) top).秘resizeOriginal(width, height);
+	}
+
+	public void appletResize(int width, int height) {
+		// JSAppletViewer only
 	}
 
 	/**
@@ -189,8 +196,8 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 		// RootPaneContainer
 		JSComponent c = (JSComponent) window; 
 		if (wNew == 0) {
-			wNew = Math.max(0, window.getContentPane().getWidth());
-			hNew = Math.max(0, window.getContentPane().getHeight());
+			wNew = Math.max(0, window.getLayeredPane().getWidth());
+			hNew = Math.max(0, window.getLayeredPane().getHeight());
 		}
 		int wOld = 0, hOld = 0;
 		if (c.秘canvas != null) {
@@ -202,7 +209,7 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 			 */
 		}
 		if (wNew >= 0 && hNew >= 0 && (wOld != wNew || hOld != hNew || c.秘canvas == null || jsgraphics == null)) {
-			jsgraphics = new JSGraphics2D(c.秘canvas = newCanvas(wNew, hNew, window));
+			jsgraphics = new JSGraphics2D(c, c.秘canvas = newCanvas(wNew, hNew, window));
 		}
 		// coerse jsgraphics to Graphics
 		return (Graphics) (Object) jsgraphics;
@@ -213,7 +220,7 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 			// applets create their own canvas
 			HTML5Canvas c = (HTML5Canvas) html5Applet._getHtml5Canvas();
 			if (c != null) {
-				return canvas = c;
+				return ((JApplet) window).秘canvas = canvas = c;
 			}
 		}
 		if (width == 0 || height == 0) {
@@ -239,8 +246,7 @@ public class JSFrameViewer extends JSApp implements JSInterface {
 			JSFrameViewer appViewer = userFramedApplet.getFrameViewer();
 			appViewer.setDisplay(canvas);
 		}
-		int iTop = (root == null ? 0 : root.getContentPane().getY());
-		DOMNode.setTopLeftAbsolute(canvas, iTop, 0);
+		DOMNode.setTopLeftAbsolute(canvas, 0, 0);
 		DOMNode.setStyles(canvas, "width", width + "px", "height", height + "px");
 		if (width > 0) {
 			//System.out.println("JSFrameViewer creating new canvas " + canvasId + ": " + width + "  " + height);

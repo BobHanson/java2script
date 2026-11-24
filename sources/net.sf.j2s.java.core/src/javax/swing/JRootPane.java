@@ -598,10 +598,11 @@ public class JRootPane extends JComponent {
 			return;
 		if (contentPane != null && contentPane.getParent() == layeredPane)
 			layeredPane.remove(contentPane);
-		content = 秘transferFrameTo((JComponent)content);
 		content.秘isContentPane = true;
+		if (contentPane != null)
+			contentPane.秘isContentPane = false;
 		Container old = contentPane;
-		contentPane = content;
+		contentPane = 秘transferFrameTo((JComponent)content);
 		layeredPane.add(contentPane, JLayeredPane.FRAME_CONTENT_LAYER);
 		if (old != null)
 			validate();
@@ -632,11 +633,15 @@ public class JRootPane extends JComponent {
 		if (layered == null)
 			throw new IllegalComponentStateException(
 					"layeredPane cannot be set to null.");
+		if (layeredPane == layered)
+			return;
 		if (layeredPane != null && layeredPane.getParent() == this)
-			this.remove(layeredPane);
+			remove(layeredPane);
+		if (layeredPane != null)
+			layeredPane.秘isLayeredPane = false;
+		layered.秘isLayeredPane = true;
 		layeredPane = layered;
-
-		this.add(layeredPane, -1);
+		add(layeredPane, -1);
 	}
 
 	/**

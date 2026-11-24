@@ -52,15 +52,22 @@ public class JSAppletUI extends JSLightweightUI {
 	 * The JMenuBar on an applet pushes its canvas down typically about 20 pixels.
 	 */
 	public void adjustCanvasForMenuBar() {
-		JMenuBar mb = ((JApplet) c).getJMenuBar();
-		int h = (mb == null || !mb.isVisible() ? 0 : ((JSMenuBarUI) mb.getUI()).height);
-		DOMNode.setStyles(getCanvas(), "top", h + "px", "position", "absolute");
+//		no longer necessary!
+//		JMenuBar mb = ((JApplet) c).getJMenuBar();
+//		int h = (mb == null || !mb.isVisible() ? 0 : ((JSMenuBarUI) mb.getUI()).height);
+//		DOMNode.setStyles(getCanvas(), "top", h + "px", "position", "absolute");
 	}
 
 	public HTML5Canvas getCanvas() {
 		Object canvas = this.c.getAppContext().getThreadGroup().秘html5Applet._getHtml5Canvas();
 		focusNode = (DOMNode) canvas;
 		return (HTML5Canvas) canvas;
+	}
+
+	@Override
+	public boolean isConnected() {
+		// applets cannot be disconnected
+		return true;
 	}
 
 //	@Override

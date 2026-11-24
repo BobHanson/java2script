@@ -928,5 +928,4 @@ RootPaneContainer// TransferHandler.HasGetTransferHandler
 			super.reshape(x, y, width, height);
 	}
 
-	
 }

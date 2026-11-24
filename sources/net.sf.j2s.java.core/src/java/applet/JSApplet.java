@@ -279,6 +279,10 @@ public class JSApplet extends JSPanel {
         	秘repaint(); // BH SwingJS needs this, because there is no system event set to do this.
     }
     
+    public boolean isResizable() {
+    	return (/** @j2sNative 	thisApplet.__Info.isResizable|| */false);    	
+    }
+    
     
     /**
      * Requests that this applet be resized.
