@@ -626,7 +626,6 @@ public abstract class JComponent extends Container {
 		}
 	}
 
-	protected int 秘c0 = 0;
 	/**
 	 * Paints this component's children. If <code>shouldUseBuffer</code> is true,
 	 * no component ancestor has a buffer and the component children can use a
@@ -677,11 +676,13 @@ public abstract class JComponent extends Container {
 				if (jc != null && jc.isShowing()) {
 					jc.getBounds(tmpRect);
 					JSGraphics2D jsg = (JSGraphics2D) (Object) g.create(tmpRect.x, 
-							tmpRect.y - (秘isContentPane || 秘isMenuBar  ? 0 : 秘c0), tmpRect.width, tmpRect.height); 
-					jsg.setColor(jc.getForeground());
-					jsg.setFont(jc.getFont());
+							tmpRect.y, tmpRect.width, tmpRect.height); 
 					boolean shouldSetFlagBack = false;
+					int mark = jsg.getMark();
+					String s0 = jsg.debugStack();
 					try {
+						jsg.setColor(jc.getForeground());
+						jsg.setFont(jc.getFont());
 //						if (isJComponent) {
 							// if (getFlag(ANCESTOR_USING_BUFFER)) {
 							// ((JComponent) comp).setFlag(ANCESTOR_USING_BUFFER, true);
@@ -692,11 +693,11 @@ public abstract class JComponent extends Container {
 							// shouldSetFlagBack = true;
 							// }
 							// if (!printing) {
-							jc.秘checkBackgroundPainted(jsg, true);
 							秘setIsRepaint(false);
+							jc.秘getGraphicsState(jsg, true);
 							jc.秘paint((Graphics) (Object) jsg);
+							jc.秘getGraphicsState(jsg, false);
 							秘setIsRepaint(true);
-							jc.秘checkBackgroundPainted(秘getJSGraphic2D((Graphics) (Object) jsg), false);
 							// } else {
 							// if (!getFlag(IS_PRINTING_ALL)) {
 							// comp.print(cg);
@@ -716,6 +717,10 @@ public abstract class JComponent extends Container {
 //							// }
 //						}
 					} finally {
+						if (mark != jsg.getMark()) {
+							System.err.println("JComponent " + jc + " did not properly dispose of graphics! " + mark + "!=" + jsg.getMark()
+							+ s0 + "\nvs\n" + jsg.debugStack());
+						}
 						jsg.dispose();
 						if (shouldSetFlagBack) {
 							((JComponent) jc).秘setFlag(ANCESTOR_USING_BUFFER, false);
@@ -864,10 +869,8 @@ public abstract class JComponent extends Container {
 			//if (!rectangleIsObscured(clipX,clipY,clipW,clipH)) {
 			if (!printing) {
 			  paintComponentSafely(cg);
-			  paintBorderSafely(cg);
 			} else {
-			   printComponentSafely(cg);
-			   printBorderSafely(cg);
+			  printComponentSafely(cg);
 			}
 			// }
 			if (!printing) {
@@ -4141,7 +4144,6 @@ public abstract class JComponent extends Container {
 	 * 
 	 * @see #registerKeyboardAction
 	 */
-	@SuppressWarnings("static-access")
 	@Override
 	public void removeNotify() {
 		super.removeNotify();
@@ -4182,8 +4184,10 @@ public abstract class JComponent extends Container {
 	 */
 	@Override
 	public void repaint(long tm, int x, int y, int width, int height) {
-		RepaintManager.currentManager(this).addDirtyRegion(this, x, y, width,
-			height);
+		if (!this.秘isConnected()) {
+			return;
+		}
+		RepaintManager.currentManager(this).addDirtyRegion(this, x, y, width, height);
 	}
 
 	/**
@@ -4407,7 +4411,7 @@ public abstract class JComponent extends Container {
 
 		//boolean hasBuffer = false;
 
-		JComponent bufferedComponent = null;
+		//JComponent bufferedComponent = null;
 		JComponent paintingComponent = this;
 
 
@@ -4529,7 +4533,7 @@ public abstract class JComponent extends Container {
 			return;
 		}
 
-		if (paintingComponent.秘isContentPane && !paintingComponent.isOpaque()) {
+		if (paintingComponent.秘isLayeredPane && !paintingComponent.isOpaque()) {
 			// SwingJS 
 			// the root pane may be opaque and need to clear the canvas
 			// we have gotten to the contentPane level. 
@@ -4580,7 +4584,7 @@ public abstract class JComponent extends Container {
 					// jpanel.秘repaint() and then draws on the background,
 					// the JPanel's background is made transparent
 					// (so that the underlying JRootPane canvas can show).
-					 paintingComponent.秘paintWithBackgroundCheck(g);
+					 paintingComponent.秘paintNowWithBackgroundCheck(g);
 					 //paintingComponent.paint(g);
 //				}
 			} finally {
@@ -4624,7 +4628,6 @@ public abstract class JComponent extends Container {
 				// Called from paint() (AWT) to repair damage
 				if (!rectangleIsObscured(x, y, w, h)) {
 					paintComponentSafely(g);
-					paintBorderSafely(g);
 				}
 				paintChildren(g);
 			}
@@ -4868,10 +4871,13 @@ public abstract class JComponent extends Container {
 	private void paintComponentSafely(Graphics g) {
 		JSGraphics2D jsg = 秘getJSGraphic2D(g);		
 		int nSave = (jsg == null ? 0 : jsg.mark());
-		秘checkBackgroundPainted(jsg, true);
+		秘getGraphicsState(jsg, true);
 		// note that paintComponent may be overridden.
 		paintComponent(g);
-		秘checkBackgroundPainted(jsg, false);
+		if (getBorder() != null) {
+			paintBorder(g);
+		}
+		秘getGraphicsState(jsg, false);
 		if (jsg != null) {
 			jsg.reset(nSave);
 		}
@@ -4894,54 +4900,13 @@ public abstract class JComponent extends Container {
 		JSGraphics2D jsg = 秘getJSGraphic2D(g);		
 		int nSave = (jsg == null ? 0 : jsg.mark());
 		printComponent(g);
+		if (getBorder() != null) {
+			printBorder(g);
+		}
 		if (jsg != null)
 			jsg.reset(nSave);
 	}
 
-	/**
-	 * In SwingJS we have only one canvas's context2d object, with one 
-	 * save/restore. We add the methods mark() and reset() to track the
-	 * use of g.create() to make sure that the proper number of dispose()
-	 * are generated. It is no problem that we run dispose() on the original
-	 * graphic or on a derivative graphic, as the key information is kept with 
-	 * the canvas, not the graphic itself.
-	 * 
-	 * @author Bob Hanson hansonr@stolaf.edu
-	 * 
-	 * @param g
-	 */
-	private void paintBorderSafely(Graphics g) {
-		if (getBorder() == null)
-			return;
-		JSGraphics2D jsg = 秘getJSGraphic2D(g);		
-		int nSave = (jsg == null ? 0 : jsg.mark());
-		paintBorder(g);
-		if (jsg != null)
-			jsg.reset(nSave);
-	}
-
-	/**
-	 * In SwingJS we have only one canvas's context2d object, with one 
-	 * save/restore. We add the methods mark() and reset() to track the
-	 * use of g.create() to make sure that the proper number of dispose()
-	 * are generated. It is no problem that we run dispose() on the original
-	 * graphic or on a derivative graphic, as the key information is kept with 
-	 * the canvas, not the graphic itself.
-	 * 
-	 * @author Bob Hanson hansonr@stolaf.edu
-	 * 
-	 * @param g
-	 */
-	private void printBorderSafely(Graphics g) {
-		if (getBorder() == null)
-			return;
-//		秘isBackgroundPainted=true;
-		JSGraphics2D jsg = 秘getJSGraphic2D(g);		
-		int nSave = (jsg == null ? 0 : jsg.mark());
-		printBorder(g);
-		if (jsg != null)
-			jsg.reset(nSave);
-	}
 
 
 }
