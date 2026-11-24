@@ -1483,7 +1483,7 @@ public abstract class Component implements ImageObserver/*
 	// }
 
 	/**
-	 * added for SwingJS
+	 * added for SwingJS from hide() or show() only
 	 * 
 	 * @param isVisible
 	 */
@@ -1493,6 +1493,8 @@ public abstract class Component implements ImageObserver/*
 
 	protected void updatePeerVisibilityOrig(boolean isVisible) {
 		peer.setVisible(isVisible);// SwingJS was hide();
+		if (!((JSComponent)this).秘isConnected())
+			return;		
 		createHierarchyEvents(HierarchyEvent.HIERARCHY_CHANGED, this, parent, HierarchyEvent.SHOWING_CHANGED,
 				Toolkit.enabledOnToolkit(AWTEvent.HIERARCHY_EVENT_MASK));
 		if (peer instanceof LightweightPeer) {
