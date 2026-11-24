@@ -29,6 +29,8 @@ package sun.swing.table;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Insets;
+
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -125,7 +127,8 @@ public class DefaultTableCellHeaderRenderer extends DefaultTableCellRenderer
 //        }
 //        setBorder(border);
 
-        setBorder(new EmptyBorder(8, 5, 7, 5)); // BH SwingJS from com.sun.java.swing.plaf.windows.WindowsTableHeaderUI$XPDefaultRenderer
+        setBorder(new EmptyBorder(2, 2, 2, 2)); 
+        // BH SwingJS from BorderUIResource, BevelBorder
 
         return this;
     }
