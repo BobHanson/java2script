@@ -500,7 +500,7 @@ public class JSMouse {
 				 */null; 
 		if (c == null)
 			return false;
-		if (c.秘isContentPane)
+		if (c.秘isContentPane || c.秘isLayeredPane)
 			c = (JComponent) c.getTopLevelAncestor();
 		return JSComponent.秘dispatchKeyEvent(c, id, jqevent, time);
 	}
